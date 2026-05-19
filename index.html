@@ -1,0 +1,1451 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LMNP">
+  <meta name="theme-color" content="#1a7a4a">
+  <meta name="description" content="Gestion LMNP La Réunion — Biens, transactions, fiscal">
+  <title>LMNP Manager</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Apple Touch Icon (généré via CSS, voir bas de page) -->
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- Tabler Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+
+  <style>
+    /* Variables de design */
+    :root {
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', monospace;
+      --color-background-primary: #ffffff;
+      --color-background-secondary: #f5f5f7;
+      --color-background-tertiary: #ebebed;
+      --color-text-primary: #1d1d1f;
+      --color-text-secondary: #6e6e73;
+      --color-text-tertiary: #a1a1a6;
+      --color-border-primary: #c7c7cc;
+      --color-border-secondary: #d2d2d7;
+      --color-border-tertiary: #e5e5ea;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-background-primary: #1c1c1e;
+        --color-background-secondary: #2c2c2e;
+        --color-background-tertiary: #3a3a3c;
+        --color-text-primary: #f5f5f7;
+        --color-text-secondary: #aeaeb2;
+        --color-text-tertiary: #636366;
+        --color-border-primary: #48484a;
+        --color-border-secondary: #3a3a3c;
+        --color-border-tertiary: #2c2c2e;
+      }
+    }
+
+    /* Reset & base */
+    html, body {
+      margin: 0; padding: 0;
+      height: 100%;
+      background: var(--color-background-secondary);
+      font-family: var(--font-sans);
+      /* Safe area pour iPhone notch */
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* Bannière d'installation PWA */
+    #pwa-banner {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: #1a7a4a;
+      color: white;
+      padding: 12px 16px;
+      font-size: 13px;
+      z-index: 9999;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    }
+    #pwa-banner.show { display: flex; }
+    #pwa-banner button {
+      background: white; color: #1a7a4a;
+      border: none; border-radius: 6px;
+      padding: 6px 12px; font-size: 12px;
+      font-weight: 600; cursor: pointer; white-space: nowrap;
+    }
+    #pwa-banner .close-btn {
+      background: transparent; color: white;
+      margin-left: auto; font-size: 18px; padding: 0 4px;
+    }
+
+    /* Ajustement app pour PWA fullscreen */
+    .app {
+      max-height: none !important;
+      height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+      border-radius: 0 !important;
+      border: none !important;
+    }
+  </style>
+</head>
+<body>
+
+<!-- Bannière installation iOS -->
+<div id="pwa-banner">
+  <span>📱 Installez l'app : appuyez sur <strong>⎙ Partager</strong> puis <strong>"Sur l'écran d'accueil"</strong></span>
+  <button class="close-btn" onclick="document.getElementById('pwa-banner').classList.remove('show');localStorage.setItem('pwa-dismissed','1')">✕</button>
+</div>
+
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font-sans);font-size:13px;color:var(--color-text-primary);background:transparent}
+.app{display:flex;height:100vh;min-height:600px;max-height:920px;border:0.5px solid var(--color-border-tertiary);border-radius:10px;overflow:hidden;background:var(--color-background-primary);position:relative}
+.sb{width:210px;min-width:210px;background:var(--color-background-secondary);border-right:0.5px solid var(--color-border-tertiary);display:flex;flex-direction:column;padding:8px 0;overflow-y:auto;transition:transform 0.2s}
+.sb-hd{padding:6px 12px 8px;font-size:12px;font-weight:500;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.sb-hd .d{font-size:10px;color:var(--color-text-tertiary)}
+.sb-sec{font-size:10px;color:var(--color-text-tertiary);padding:6px 12px 2px;text-transform:uppercase;font-weight:500}
+.ni{display:flex;align-items:center;gap:8px;padding:6px 12px;cursor:pointer;border-radius:5px;margin:1px 5px;font-size:12px;color:var(--color-text-secondary);min-height:32px}
+.ni:hover{background:var(--color-background-primary);color:var(--color-text-primary)}
+.ni.active{background:var(--color-background-primary);color:var(--color-text-primary);font-weight:500}
+.ni i{font-size:14px;width:15px;text-align:center}
+.ni .nb{font-size:9.5px;padding:1px 5px;border-radius:8px;background:var(--color-background-tertiary);margin-left:auto;color:var(--color-text-secondary)}
+.ni .nb.red{background:#fcebeb;color:#a32d2d}.ni .nb.orange{background:#faeeda;color:#854f0b}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column}
+.tb{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);position:sticky;top:0;z-index:10;gap:8px}
+.tb h1{font-size:15px;font-weight:500;display:flex;align-items:center;gap:6px;flex:1;min-width:0;overflow:hidden}
+.tbr{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.menu-btn{display:none;background:none;border:0.5px solid var(--color-border-secondary);border-radius:6px;padding:6px;cursor:pointer;color:var(--color-text-primary);font-size:18px}
+.sel{font-size:12px;padding:5px 8px;border-radius:5px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);cursor:pointer;min-height:32px}
+.ct{padding:12px 14px;flex:1}
+.kpi-g{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.kpi{background:var(--color-background-secondary);border-radius:6px;padding:9px 11px}
+.kpi-l{font-size:10.5px;color:var(--color-text-secondary)}
+.kpi-v{font-size:18px;font-weight:500;margin-top:2px}
+.kpi-v.p{color:#1a7a4a}.kpi-v.n{color:#c0392b}
+.kpi-s{font-size:10px;color:var(--color-text-tertiary);margin-top:1px}
+.st{font-size:13px;font-weight:500;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.tw{border:0.5px solid var(--color-border-tertiary);border-radius:6px;overflow-x:auto;overflow-y:hidden;margin-bottom:12px;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:11.5px;min-width:max-content}
+th{background:var(--color-background-secondary);padding:6px 8px;text-align:left;font-weight:500;color:var(--color-text-secondary);font-size:10.5px;border-bottom:0.5px solid var(--color-border-tertiary);white-space:nowrap}
+td{padding:5px 8px;border-bottom:0.5px solid var(--color-border-tertiary);white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--color-background-secondary)}
+.bg{display:inline-flex;padding:1px 7px;border-radius:20px;font-size:10.5px;font-weight:500}
+.b-m{background:#e1f5ee;color:#0f6e56}.b-a{background:#faeeda;color:#854f0b}.b-t{background:#faece7;color:#993c1d}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 10px;border-radius:5px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-primary);cursor:pointer;font-size:12px;min-height:32px;justify-content:center}
+.btn:hover{background:var(--color-background-tertiary)}
+.btn-p{background:#1a7a4a;border-color:#1a7a4a;color:#fff}
+.btn-p:hover{background:#15623b}
+.btn-d{background:#c0392b;border-color:#c0392b;color:#fff;font-size:11px;padding:4px 7px;min-height:0}
+.btn-sm{padding:4px 8px;font-size:11px;min-height:0}
+.mb{position:absolute;inset:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:100;padding:10px}
+.mo{background:var(--color-background-primary);border-radius:10px;border:0.5px solid var(--color-border-secondary);width:480px;max-width:100%;max-height:90vh;overflow-y:auto}
+.mh{padding:11px 14px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;justify-content:space-between;font-size:13px;font-weight:500}
+.mbo{padding:12px 14px}
+.fg{margin-bottom:10px}
+.fg label{display:block;font-size:11.5px;color:var(--color-text-secondary);margin-bottom:3px}
+.fg input,.fg select,.fg textarea{width:100%;padding:8px 10px;border:0.5px solid var(--color-border-secondary);border-radius:5px;background:var(--color-background-primary);color:var(--color-text-primary);font-size:14px;min-height:36px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fa{display:flex;gap:8px;justify-content:flex-end;padding:10px 14px;border-top:0.5px solid var(--color-border-tertiary)}
+.al{padding:8px 11px;border-radius:5px;font-size:11.5px;margin-bottom:10px;border-left:3px solid}
+.al-i{background:#e6f1fb;color:#185fa5;border-color:#185fa5}
+.al-w{background:#faeeda;color:#854f0b;border-color:#ba7517}
+.al-d{background:#fcebeb;color:#a32d2d;border-color:#a32d2d}
+.al-s{background:#eaf3de;color:#3b6d11;border-color:#3b6d11}
+.sz{border:1.5px dashed var(--color-border-secondary);border-radius:8px;padding:24px;text-align:center;margin-bottom:10px}
+.sz i{font-size:30px;color:var(--color-text-tertiary);display:block;margin-bottom:6px}
+.scan-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.scan-btn{padding:18px 12px;text-align:center;border:0.5px solid var(--color-border-secondary);border-radius:6px;background:var(--color-background-secondary);cursor:pointer;font-size:12.5px;color:var(--color-text-primary);min-height:80px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.scan-btn:hover{background:var(--color-background-tertiary)}
+.scan-btn i{font-size:28px;display:block;margin-bottom:5px;color:#1a7a4a}
+.rc{background:var(--color-background-secondary);border-radius:6px;padding:10px;margin-bottom:10px;border:0.5px solid var(--color-border-tertiary)}
+.rc .ff{display:flex;justify-content:space-between;padding:3px 0;font-size:12px;gap:8px}
+.rc .ff span:first-child{color:var(--color-text-secondary)}
+.rc .ff span:last-child{font-weight:500;text-align:right}
+.tr-r{color:#1a7a4a}.tr-c{color:#c0392b}
+.tag{font-size:10px;padding:1px 5px;border-radius:10px;background:var(--color-background-secondary);color:var(--color-text-secondary);border:0.5px solid var(--color-border-tertiary)}
+.bc{border:0.5px solid var(--color-border-tertiary);border-radius:6px;padding:10px;margin-bottom:8px;cursor:pointer}
+.bc:hover{background:var(--color-background-secondary)}
+.bch{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px}
+.bs{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px}
+.sm{font-size:10.5px}.sm .l{color:var(--color-text-tertiary)}.sm .v{font-weight:500;font-size:12px}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fs{border:0.5px solid var(--color-border-tertiary);border-radius:6px;overflow:hidden;margin-bottom:10px}
+.fsh{background:var(--color-background-secondary);padding:7px 10px;font-size:12px;font-weight:500;border-bottom:0.5px solid var(--color-border-tertiary)}
+.fro{display:flex;justify-content:space-between;padding:5px 10px;font-size:11.5px;border-bottom:0.5px solid var(--color-border-tertiary);gap:8px}
+.fro:last-child{border-bottom:none}
+.fro.tot{font-weight:500;background:var(--color-background-secondary)}
+.fro.hl{background:#e6f1fb}
+.fro .lab{color:var(--color-text-secondary)}
+.lpb{height:7px;background:var(--color-background-secondary);border-radius:4px;overflow:hidden;margin-top:5px}
+.lpf{height:100%;border-radius:4px}
+.empty{text-align:center;padding:30px;color:var(--color-text-secondary)}
+.empty i{font-size:32px;display:block;margin-bottom:8px}
+.te{display:flex;align-items:center;gap:8px;padding:8px 11px;background:var(--color-background-secondary);border-radius:6px;margin-bottom:10px;font-size:12px;flex-wrap:wrap}
+.te .bdg{padding:2px 8px;border-radius:14px;font-size:10.5px;font-weight:500;background:#eaf3de;color:#3b6d11}
+.ts{font-size:10px;color:var(--color-text-tertiary)}
+.ck{padding:9px 11px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;gap:8px}
+.ck-erreur{background:#fcebeb;border-left:3px solid #c0392b}
+.ck-avert{background:#faeeda;border-left:3px solid #ba7517}
+.ck-info{background:#e6f1fb;border-left:3px solid #185fa5}
+.ck-ok{background:#eaf3de;border-left:3px solid #1a7a4a}
+.ck i{font-size:16px;flex-shrink:0}
+.ck-t{font-size:12px;font-weight:500}
+.ck-d{font-size:11px;color:var(--color-text-secondary);margin-top:1px}
+.ck-r{font-size:10px;color:var(--color-text-tertiary);margin-top:3px;font-family:var(--font-mono)}
+.si{padding:9px 11px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;gap:8px}
+.si-ic{width:26px;height:26px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.si-b{flex:1;min-width:0}.si-n{font-size:12px;font-weight:500}
+.si-u{font-size:10px;color:#185fa5;cursor:pointer;text-decoration:underline;word-break:break-all}
+.si-d{font-size:10.5px;color:var(--color-text-secondary);margin-top:2px}
+.chip{padding:5px 10px;border-radius:14px;font-size:11.5px;cursor:pointer;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);min-height:28px;display:inline-flex;align-items:center}
+.chip.active{background:#185fa5;border-color:#185fa5;color:#fff}
+.fb{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.nd{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.nd-urgent{background:#c0392b}.nd-warn{background:#ba7517}.nd-info{background:#185fa5}.nd-success{background:#1a7a4a}
+.search-inp{width:100%;padding:8px 12px;border:0.5px solid var(--color-border-secondary);border-radius:5px;background:var(--color-background-secondary);font-size:13px;margin-bottom:10px}
+.cmp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.cmp-c{background:var(--color-background-secondary);padding:8px 10px;border-radius:6px}
+.cmp-l{font-size:10.5px;color:var(--color-text-secondary)}
+.cmp-2y{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.cmp-v{font-size:15px;font-weight:500}
+.cmp-d{font-size:10.5px;padding:1px 6px;border-radius:10px}
+.cmp-d.up{background:#eaf3de;color:#3b6d11}.cmp-d.dn{background:#fcebeb;color:#a32d2d}
+.iy{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:10px}
+.iy-c{background:var(--color-background-secondary);padding:7px;border-radius:5px;text-align:center;font-size:10.5px}
+.iy-c .yl{color:var(--color-text-secondary);font-size:10px}
+.iy-c .yv{font-weight:500;font-size:13px}
+.iy-c .yd{font-size:9.5px;color:var(--color-text-tertiary)}
+.bk{display:none}
+@media (max-width:760px){
+  .menu-btn{display:flex;align-items:center;justify-content:center}
+  .sb{position:absolute;left:0;top:0;height:100%;z-index:30;transform:translateX(-100%);width:240px}
+  .sb.open{transform:translateX(0)}
+  .bk{display:block;position:absolute;inset:0;background:rgba(0,0,0,0.4);z-index:25}
+  .bk.show{display:block}
+  .kpi-g,.cmp-grid{grid-template-columns:1fr 1fr;gap:6px}
+  .kpi-v,.cmp-v{font-size:15px}
+  .iy{grid-template-columns:repeat(3,1fr)}
+  .fg2,.fr{grid-template-columns:1fr;gap:8px}
+  .bs{grid-template-columns:1fr 1fr}
+  .ct{padding:10px}
+  .tb h1{font-size:13px}
+  .sel,.btn{font-size:13px;padding:8px 12px;min-height:36px}
+  .ni{padding:9px 14px;font-size:13px;min-height:40px}
+  .ni i{font-size:16px;width:18px}
+}
+</style>
+
+<h2 class="sr-only">Application LMNP intégrée — 451 transactions 2021-2024, mobile responsive, capture photo native, contrôle inter-années.</h2>
+
+<div class="app" id="app">
+  <div class="bk" id="bk" onclick="toggleSB()"></div>
+  <div class="sb" id="sb">
+    <div class="sb-hd"><i class="ti ti-building" aria-hidden="true"></i>LMNP Manager<span class="d">Réunion</span></div>
+    <div class="sb-sec">Gestion</div>
+    <div class="ni active" onclick="nav('dash')"><i class="ti ti-dashboard" aria-hidden="true"></i>Dashboard</div>
+    <div class="ni" onclick="nav('biens')"><i class="ti ti-building-estate" aria-hidden="true"></i>Mes biens<span class="nb" id="nb-biens">—</span></div>
+    <div class="ni" onclick="nav('tx')"><i class="ti ti-list" aria-hidden="true"></i>Transactions<span class="nb" id="nb-tx">—</span></div>
+    <div class="ni" onclick="nav('scan')"><i class="ti ti-camera" aria-hidden="true"></i>Scan facture IA</div>
+    <div class="sb-sec">Comptabilité</div>
+    <div class="ni" onclick="nav('amort')"><i class="ti ti-chart-line" aria-hidden="true"></i>Amortissements</div>
+    <div class="ni" onclick="nav('rep')"><i class="ti ti-scale" aria-hidden="true"></i>Répartition</div>
+    <div class="ni" onclick="nav('fiscal')"><i class="ti ti-receipt-tax" aria-hidden="true"></i>Résultat fiscal</div>
+    <div class="ni" onclick="nav('forms')"><i class="ti ti-file-text" aria-hidden="true"></i>Formulaires</div>
+    <div class="ni" onclick="nav('iy')"><i class="ti ti-arrows-double-ne-sw" aria-hidden="true"></i>Inter-années</div>
+    <div class="sb-sec">Outils</div>
+    <div class="ni" onclick="nav('dur')"><i class="ti ti-clock-hour-3" aria-hidden="true"></i>Durées amort.<span class="nb">18</span></div>
+    <div class="ni" onclick="nav('chg')"><i class="ti ti-checklist" aria-hidden="true"></i>Charges déduct.<span class="nb">82</span></div>
+    <div class="ni" onclick="nav('pv')"><i class="ti ti-calculator" aria-hidden="true"></i>Plus-value</div>
+    <div class="sb-sec">Conformité</div>
+    <div class="ni" onclick="nav('terr')"><i class="ti ti-map-pin" aria-hidden="true"></i>Profil DOM</div>
+    <div class="ni" onclick="nav('src')"><i class="ti ti-books" aria-hidden="true"></i>Sources<span class="nb">17</span></div>
+    <div class="ni" onclick="nav('notifs')"><i class="ti ti-bell" aria-hidden="true"></i>Notifications<span class="nb red" id="nb-notifs">—</span></div>
+    <div class="ni" onclick="nav('chk')"><i class="ti ti-shield-check" aria-hidden="true"></i>Contrôle<span class="nb orange" id="nb-chk">—</span></div>
+  </div>
+  <div class="main">
+    <div class="tb">
+      <button class="menu-btn" onclick="toggleSB()" aria-label="Menu"><i class="ti ti-menu-2" aria-hidden="true"></i></button>
+      <h1 id="title"><i class="ti ti-dashboard" aria-hidden="true"></i>Dashboard</h1>
+      <div class="tbr">
+        <select class="sel" id="ys" onchange="state.annee=this.value;save('lmnp_annee',state.annee);render()">
+          <option>2021</option><option>2022</option><option>2023</option><option selected>2024</option><option>2025</option>
+        </select>
+        <button class="btn btn-p" id="action-btn" onclick="mainAction()"><i class="ti ti-plus" aria-hidden="true"></i></button>
+      </div>
+    </div>
+    <div class="ct" id="ct"></div>
+  </div>
+  <div id="mc"></div>
+</div>
+
+<script>
+// Transactions 2021-2024 (451 entrées extraites du Journal du fichier 2023-2024_V2)
+const TX_RAW=`t1|2021-06-28|b1|c:entretien|88.70|FOURNITURES - FACT MR BRICOLAGE
+t2|2021-08-13|b2|c:entretien|29.90|FOURNITURES - FACT MR BRICOLAGE
+t3|2021-09-06|b2|c:entretien|103.90|FOURNITURES - FACT LEROY MERLIN
+t4|2021-09-03|b2|c:entretien|216.30|FOURNITURES - FACT LEROY MERLIN
+t5|2021-09-11|b1|c:entretien|636.35|FOURNITURES - FACT LEROY MERLIN
+t6|2021-09-14|b2|c:entretien|55.15|FOURNITURES - FACT WELDOM
+t7|2021-05-28|b2|c:entretien|122.60|FOURNITURES - FACT MR BRICOLAGE
+t8|2021-06-26|b1|c:entretien|95.90|FOURNITURES - FACT WELDOM
+t9|2021-06-12|b2|c:entretien|87.30|FOURNITURES - FACT WELDOM
+t10|2021-07-12|b1|c:travaux|1009.75|MATERIAUX - FACT LEROY MERLIN
+t11|2021-08-28|b2|c:travaux|151.20|MATERIAUX - FACT LEROY MERLIN
+t12|2021-09-15|b1|c:entretien|23.85|FOURNITURES - FACT LEROY MERLIN
+t13|2021-09-18|b2|c:entretien|11.90|FOURNITURES - FACT LEROY MERLIN
+t14|2021-09-25|b2|c:travaux|52.80|MATERIAUX - FACT TRUCS ET ASTUCES
+t15|2021-10-13|b2|c:travaux|42.40|MATERIAUX - FACT WELDOM
+t16|2021-10-16|b2|c:mobilier|79.98|MOBILIER - FACT LA FOIRFOUILLE
+t17|2021-11-12|b1|c:mobilier|32.90|DECO - FACT MARECHAL CENTER
+t18|2021-11-13|b1|c:mobilier|98.00|MOBILIER - FACT WELDOM
+t19|2021-11-18|b1|c:mobilier|34.50|USTENCILES CUIS - FACT DCASA
+t20|2021-11-19|b1|c:entretien|136.20|FOURNITURES - FACT QUINCAILLERIE
+t21|2021-11-18|b1|c:mobilier|75.00|MOBILIER - FACT CONFORAMA
+t22|2021-11-19|b2|c:mobilier|100.00|MOBILIER - FACT ATLAS
+t23|2021-11-22|b1|c:mobilier|293.50|DECO - FACT MR BRICOLAGE
+t24|2021-11-23|b2|c:entretien|104.00|FOURNITURES - FACT WELDOM
+t25|2021-11-23|b2|c:mobilier|19.99|DECO - FACT DARTY
+t26|2021-11-17|b1|c:mobilier|13.45|DECO - FACT MR BRICOLAGE
+t27|2021-11-02|b2|c:entretien|80.40|FOURNITURES - FACT LEROY MERLIN
+t28|2021-11-02|b2|c:travaux|210.75|MATERIAUX - FACT LEROY MERLIN
+t29|2021-11-02|b2|c:travaux|32.30|MATERIAUX - FACT LEROY MERLIN
+t30|2021-11-04|b1|c:entretien|186.15|FOURNITURES - FACT MOGALIA
+t31|2021-11-08|b2|c:entretien|25.90|FOURNITURES - FACT FERMES ET JARDIN
+t32|2021-11-08|b2|c:travaux|119.80|MATERIAUX - FACT MOGALIA
+t33|2021-11-09|b2|c:mobilier|39.99|DECO - FACT GIFI
+t34|2021-11-10|b2|c:mobilier|180.28|DECO - FACT CENTRAKOR
+t35|2021-11-10|b1|c:entretien|115.80|FOURNITURES - FACT LEROY MERLIN
+t36|2021-11-10|b1|c:mobilier|95.21|DECO - FACT LA FOIRFOUILLE
+t37|2021-11-12|b2|c:mobilier|113.45|DECO - FACT LA FOIRFOUILLE
+t38|2021-11-15|b2|c:mobilier|393.75|DECO - FACT MR BRICOLAGE
+t39|2021-11-16|b2|c:mobilier|219.86|USTENCILES CUIS - FACT CARREFOUR
+t40|2021-11-19|b1|c:autre|85.60|LINGE DE MAISON - FACT CONFORAMA
+t41|2021-11-19|b2|c:autre|72.00|LINGE DE MAISON - FACT CONFORAMA
+t42|2021-11-20|b2|c:mobilier|49.06|DECO - FACT LA FOIRFOUILLE
+t43|2021-11-19|b1|c:frais_gestion|119.81|ELECTROMENAGER - FACT DARTY
+t44|2021-11-23|b1|c:frais_gestion|119.81|ELECTROMENAGER - FACT BUT
+t45|2021-11-23|b2|c:mobilier|116.35|MOBILIER - FACT BUT
+t46|2021-11-30|b1|c:entretien|43.80|FOURNITURES - FACT LEROY MERLIN
+t47|2021-11-16|b2|c:travaux|60.00|MATERIAUX - FACT ESPACE DECO
+t48|2021-11-02|b2|c:frais_gestion|945.80|ELECTROMENAGER - FACT CONFORAMA
+t49|2021-11-25|b2|c:travaux|99.60|MATERIAUX - FACT MOGALIA
+t50|2021-11-24|b1|c:mobilier|36.56|USTENCILES CUIS - FACT LA FOIRFOUILLE
+t51|2021-11-25|b1|c:mobilier|49.99|DECO - FACT LA FOIRFOUILLE
+t52|2021-10-05|b1|c:entretien|109.20|FOURNITURES - FACT LEROY MERLIN
+t53|2021-10-16|b1|c:mobilier|109.20|DECO - FACT LA FOIRFOUILLE
+t54|2021-10-16|b2|c:entretien|72.60|FOURNITURES - FACT WELDOM
+t55|2021-10-19|b2|c:travaux|330.75|MATERIAUX - FACT LEROY MERLIN
+t56|2021-10-23|b1|c:travaux|337.45|MATERIAUX - FACT LEROY MERLIN
+t57|2021-10-26|b2|c:entretien|146.15|FOURNITURES - FACT WELDOM
+t58|2021-10-30|b1|c:entretien|275.10|FOURNITURES - FACT LEROY MERLIN
+t59|2021-12-31|b1|r:loyer|912.00|LOYER - RELEVE IP
+t60|2021-12-31|b1|r:autre|64.00|FRAIS DE GESTION - RELEVE IP
+t61|2021-12-31|b2|r:loyer|775.00|LOYER - RELEVE IP
+t62|2021-12-31|b2|r:autre|58.00|FRAIS DE GESTION - RELEVE IP
+t63|2021-07-20|b1|c:assurance|28.15|ASSURANCE PNO - RELEVE IP
+t64|2021-07-20|b2|c:assurance|38.57|ASSURANCE PNO - RELEVE IP
+t65|2021-12-31|b1|c:taxe_fonciere|323.36|TAXE FONCIERE - PRORATA
+t66|2021-12-31|b2|c:taxe_fonciere|443.12|TAXE FONCIERE - PRORATA
+t67|2021-12-31|b1|c:interets|382.44|INTERETS BANCAIRES
+t68|2021-12-31|b2|c:interets|524.09|INTERETS BANCAIRES
+t69|2021-12-31|b1|c:autre|545.00|AMORTISSEMENTS
+t70|2021-12-31|b1|c:autre|545.00|DOTATIONS AMORTISSEMENTS
+t71|2021-12-31|b2|c:autre|409.00|DOTATIONS AMORTISSEMENTS
+t72|2022-01-20|b1|r:loyer|7630.00|LOYER - RELEVE IP
+t73|2022-12-31|b2|c:autre|75.00|JARDIN - FACT LES JARDINS DOLIVIER
+t74|2022-12-31|b1|c:autre|846.00|FRAIS DE GESTION - RELEVE IP
+t75|2022-06-01|b1|c:autre|85.00|SERVICES EXTERIEURS - RELEVE IP
+t76|2022-12-31|b2|r:loyer|8396.00|LOYER - RELEVE IP
+t77|2022-12-31|b2|c:autre|444.00|FRAIS DE GESTION - RELEVE IP
+t78|2022-12-31|b1|c:interets|650.46|INTERETS BANCAIRES
+t79|2022-12-31|b2|c:interets|938.44|INTERETS BANCAIRES
+t80|2022-12-11|b1|c:taxe_fonciere|112.16|TAXE FONCIERE
+t81|2022-12-12|b2|c:taxe_fonciere|161.82|TAXE FONCIERE
+t82|2022-12-31|b1|c:assurance|321.50|ASSURANCE PRET
+t83|2022-02-18|b1|c:entretien|240.50|FOURNITURES - FACT RAVATE
+t84|2022-02-18|b1|c:entretien|124.30|FOURNITURES - FACT WELDOM
+t85|2022-06-17|b2|c:entretien|233.40|FOURNITURES - FACT CATENA
+t86|2022-05-06|b1|c:entretien|580.20|FOURNITURES - FACT WELDOM
+t87|2022-07-15|b2|c:mobilier|77.35|DECO - FACT DCASA
+t88|2022-07-27|b2|c:entretien|32.30|FOURNITURES - FACT LEROY MERLIN
+t89|2022-11-28|b1|c:travaux|60.00|MATERIAUX - FACT ESPACE DECO
+t90|2022-12-31|b1|c:assurance|60.71|ASSURANCE PNO
+t91|2022-12-31|b2|c:assurance|87.60|ASSURANCE PNO
+t92|2023-02-14|b4|c:electricite|49.96|ELECTRICITE EDF
+t93|2023-04-24|b4|c:electricite|70.93|ELECTRICITE EDF
+t94|2023-06-16|b4|c:electricite|58.09|ELECTRICITE EDF
+t95|2023-08-16|b4|c:electricite|66.61|ELECTRICITE EDF
+t96|2023-10-12|b4|c:electricite|379.51|ELECTRICITE EDF
+t97|2023-12-15|b4|c:electricite|307.78|ELECTRICITE EDF
+t98|2023-01-15|b4|c:eau|63.33|EAU RUNEO
+t99|2023-01-01|b1|c:assurance|77.34|ASSURANCE PNO
+t100|2023-01-01|b2|c:assurance|94.54|ASSURANCE PNO
+t101|2023-01-04|b4|c:travaux|163.50|MATERIAUX WELDOM
+t102|2023-01-13|b4|c:travaux|499.80|MATERIAUX WELDOM
+t103|2023-01-25|b4|c:travaux|225.50|MATERIAUX LEROY MERLIN
+t104|2023-01-09|b4|c:frais_gestion|316.00|ELECTROMENAGER CONFORAMA
+t105|2023-01-09|b4|c:mobilier|138.00|MOBILIER CONFORAMA
+t106|2023-01-17|b4|c:frais_gestion|199.99|ELECTROMENAGER DARTY
+t107|2023-01-14|b4|c:travaux|326.12|MATERIAUX LEROY MERLIN
+t108|2023-01-02|b4|c:mobilier|119.93|DECO FOIR FOUILLE
+t109|2023-01-13|b4|c:entretien|108.87|FOURNITURES LEROY MERLIN
+t110|2023-01-07|b4|c:entretien|32.40|FOURNITURES WELDOM
+t111|2023-02-25|b4|c:mobilier|186.44|DECO RAVATE
+t112|2023-02-25|b4|c:mobilier|213.50|DECO RAVATE
+t113|2023-01-19|b4|c:travaux|26.30|MATERIAUX LEROY MERLIN
+t114|2023-06-06|b4|c:travaux|170.50|MATERIAUX WELDOM
+t115|2023-01-14|b4|c:frais_gestion|229.49|ELECTROMENAGER DARTY
+t116|2023-01-26|b4|c:entretien|69.40|FOURNITURES LEROY MERLIN
+t117|2023-01-25|b4|c:travaux|100.00|MATERIAUX 109 DISTRIB
+t118|2023-01-16|b4|c:travaux|85.68|MATERIAUX RAVATE ELEC
+t119|2023-01-24|b4|c:entretien|56.60|FOURNITURES 109 DISTRIB
+t120|2023-01-19|b4|c:entretien|56.42|FOURNITURES BATI CENTRE
+t121|2023-01-30|b4|c:travaux|32.05|MATERIAUX LEROY MERLIN
+t122|2023-01-30|b4|c:entretien|23.89|FOURNITURES ATELIER BRIKO
+t123|2023-01-28|b4|c:travaux|116.50|MATERIAUX LEROY MERLIN
+t124|2023-01-29|b4|c:travaux|89.90|MATERIAUX LEROY MERLIN
+t125|2023-01-05|b4|c:travaux|45.10|MATERIAUX LEROY MERLIN
+t126|2023-01-07|b4|c:travaux|9.80|MATERIAUX WELDOM
+t127|2023-01-13|b4|c:travaux|19.50|MATERIAUX WELDOM
+t128|2023-01-16|b4|c:travaux|13.00|MATERIAUX BATI CENTRE
+t129|2023-02-15|b4|c:travaux|1838.15|MATERIAUX VIVRE EN BOIS
+t130|2023-02-19|b4|c:travaux|116.45|MATERIAUX GIFI
+t131|2023-02-01|b4|c:travaux|43.90|MATERIAUX LEROY MERLIN
+t132|2023-02-25|b4|c:mobilier|181.44|MOBILIER RAVATE
+t133|2023-02-04|b4|c:entretien|14.75|FOURNITURES LEROY MERLIN
+t134|2023-02-24|b4|c:mobilier|21.65|DECO CONFORAMA
+t135|2023-02-24|b4|c:mobilier|133.38|DECO DCASA
+t136|2023-02-17|b4|c:mobilier|51.47|DECO MAISON DU MONDE
+t137|2023-02-18|b4|c:entretien|37.80|FOURNITURES BRICOLAGE
+t138|2023-02-17|b4|c:mobilier|149.26|DECO GIFI
+t139|2023-02-18|b4|c:mobilier|119.30|DECO FOIR FOUILLE
+t140|2023-02-19|b4|c:mobilier|29.65|DECO LEROY MERLIN
+t141|2023-02-14|b4|c:travaux|86.40|MATERIAUX LEROY MERLIN
+t142|2023-02-13|b4|c:mobilier|47.70|DECO MARECHAL CENTER
+t143|2023-01-09|b4|c:entretien|34.71|FOURNITURES ELEC
+t144|2023-03-01|b4|c:mobilier|251.87|DECO CARREFOUR
+t145|2023-03-03|b4|c:travaux|1838.15|MATERIAUX VIVRE EN BOIS
+t146|2023-03-24|b4|c:mobilier|145.76|DECO CARREFOUR
+t147|2023-03-28|b4|c:entretien|55.90|FOURNITURES CATENA
+t148|2023-03-27|b4|c:mobilier|25.90|DECO MR BRICOLAGE
+t149|2023-03-24|b4|c:entretien|156.00|FOURNITURES ATELIER RECREATIF
+t150|2023-03-10|b4|c:mobilier|215.23|DECO LA FOIRFOUILLE
+t151|2023-03-11|b4|c:entretien|157.17|FOURNITURES RUN MARKET
+t152|2023-03-11|b4|c:mobilier|154.60|DECO LEROY MERLIN
+t153|2023-03-13|b4|c:mobilier|11.90|DECO LEROY MERLIN
+t154|2023-03-08|b4|r:entretien|74.75|REMBOURSEMENT OI FIXATIONS
+t155|2023-03-10|b4|c:entretien|124.50|FOURNITURES MR BRICOLAGE
+t156|2023-03-11|b4|c:travaux|164.85|MATERIAUX LEROY MERLIN
+t157|2023-04-12|b4|c:frais_gestion|409.85|ELECTROMENAGER CARREFOUR
+t158|2023-04-04|b1|c:travaux|1203.36|MATERIAUX SCPR
+t159|2023-04-21|b4|c:entretien|124.05|FOURNITURES REUNIPOOL
+t160|2023-04-18|b4|c:entretien|105.80|FOURNITURES CATENA
+t161|2023-04-26|b4|c:mobilier|125.00|DECO DCASA
+t162|2023-04-26|b4|c:mobilier|226.55|DECO DCASA
+t163|2023-04-18|b4|c:mobilier|90.64|DECO SOSH
+t164|2023-05-10|b3|c:travaux|149.90|MATERIAUX LEROY MERLIN
+t165|2023-05-02|b3|c:mobilier|80.95|DECO DCASA
+t166|2023-05-15|b3|c:travaux|358.78|MATERIAUX SCPR
+t167|2023-05-19|b3|c:entretien|355.25|FOURNITURES LEROY MERLIN
+t168|2023-05-22|b3|c:travaux|45.25|MATERIAUX ATELIER BRIKO
+t169|2023-05-30|b3|c:travaux|7.98|MATERIAUX SCPR
+t170|2023-05-15|b3|c:travaux|117.69|MATERIAUX SCPR
+t171|2023-05-13|b3|c:travaux|267.13|MATERIAUX SCPR
+t172|2023-05-13|b3|c:travaux|26.12|MATERIAUX SCPR
+t173|2023-05-09|b3|c:entretien|7.00|FOURNITURES CAT OI
+t174|2023-05-17|b3|c:travaux|136.40|MATERIAUX SCPR
+t175|2023-05-31|b3|c:travaux|74.82|MATERIAUX BH
+t176|2023-05-24|b3|c:travaux|152.32|MATERIAUX BH
+t177|2023-05-10|b3|c:mobilier|11.73|DECO BUT
+t178|2023-06-02|b3|c:mobilier|49.97|DECO SWEET HOME
+t179|2023-07-12|b3|c:entretien|82.30|FOURNITURES LEROY MERLIN
+t180|2023-07-20|b3|c:mobilier|64.90|DECO LA FOIRFOUILLE
+t181|2023-07-20|b3|c:mobilier|12.47|DECO LA FOIRFOUILLE
+t182|2023-07-30|b3|c:entretien|81.05|FOURNITURES LEROY MERLIN
+t183|2023-08-22|b4|c:mobilier|113.15|DECO FERMES ET JARDIN
+t184|2023-08-21|b4|c:mobilier|116.50|DECO RAVATE
+t185|2023-08-30|b3|c:entretien|219.60|FOURNITURES LEROY MERLIN
+t186|2023-08-17|b3|c:travaux|294.37|MATERIAUX SCPR
+t187|2023-08-04|b3|c:entretien|66.80|FOURNITURES QUINCAILLERIE
+t188|2023-08-19|b3|c:entretien|70.00|FOURNITURES WELDOM
+t189|2023-08-05|b3|c:entretien|83.10|FOURNITURES ATELIER BRIKO
+t190|2023-08-26|b3|c:entretien|88.95|FOURNITURES SOPSAR
+t191|2023-08-26|b3|c:entretien|93.30|FOURNITURES PRD
+t192|2023-08-24|b3|c:travaux|364.43|MATERIAUX VIVRE EN BOIS
+t193|2023-08-19|b3|c:travaux|199.80|MATERIAUX WELDOM
+t194|2023-08-24|b4|c:mobilier|115.80|MOBILIER WELDOM
+t195|2023-08-24|b3|c:entretien|7.82|FOURNITURES WELDOM
+t196|2023-08-22|b4|c:mobilier|43.30|DECO LA FOIRFOUILLE
+t197|2023-08-18|b3|c:mobilier|69.70|DECO MR BRICOLAGE
+t198|2023-08-18|b3|c:entretien|211.95|FOURNITURES LEROY MERLIN
+t199|2023-09-14|b4|c:mobilier|877.55|MOBILIER SAS SUN CREATIV
+t200|2023-09-06|b3|c:mobilier|442.93|DECO CARREFOUR
+t201|2023-09-24|b3|c:entretien|251.30|FOURNITURES LEROY MERLIN
+t202|2023-09-27|b3|c:mobilier|346.23|DECO CARREFOUR
+t203|2023-09-02|b3|c:travaux|122.04|MATERIAUX VIVRE EN BOIS
+t204|2023-09-15|b3|c:travaux|89.18|MATERIAUX ATELIER BRIKO
+t205|2023-09-06|b3|c:travaux|322.70|MATERIAUX SCPR
+t206|2023-10-28|b3|c:entretien|11.70|FOURNITURES WELDOM
+t207|2023-10-20|b3|c:entretien|146.65|FOURNITURES LEROY MERLIN
+t208|2023-10-20|b3|c:travaux|17.66|MATERIAUX SCPR
+t209|2023-10-27|b4|c:entretien|47.47|FOURNITURES LEADER PRICE
+t210|2023-10-28|b3|c:travaux|452.05|MATERIAUX ATELIER BRIKO
+t211|2023-11-10|b3|c:travaux|169.00|MATERIAUX ATELIER BRIKO
+t212|2023-11-07|b3|c:travaux|25.25|MATERIAUX ATELIER BRIKO
+t213|2023-11-23|b3|c:entretien|43.70|FOURNITURES LEROY MERLIN
+t214|2023-11-17|b3|c:entretien|65.81|FOURNITURES CAT OI
+t215|2023-11-17|b3|c:entretien|35.00|FOURNITURES CAT OI
+t216|2023-11-06|b3|c:travaux|132.60|MATERIAUX SCPR
+t217|2023-11-22|b3|c:travaux|25.97|MATERIAUX SCPR
+t218|2023-11-20|b3|c:travaux|13.56|MATERIAUX SCPR
+t219|2023-11-28|b3|c:entretien|89.35|FOURNITURES LEROY MERLIN
+t220|2023-11-30|b3|c:entretien|94.50|FOURNITURES LEROY MERLIN
+t221|2023-11-17|b3|c:entretien|14.90|FOURNITURES WELDOM
+t222|2023-11-24|b3|c:entretien|280.15|FOURNITURES LEROY MERLIN
+t223|2023-12-22|b3|c:travaux|212.95|MATERIAUX BH
+t224|2023-12-13|b3|c:entretien|1.98|FOURNITURES SOSH
+t225|2023-12-09|b3|c:entretien|288.95|FOURNITURES LEROY MERLIN
+t226|2023-12-01|b3|c:entretien|289.85|FOURNITURES LEROY MERLIN
+t227|2023-12-26|b3|c:entretien|30.00|FOURNITURES RAVATE ELEC
+t228|2023-12-19|b3|c:assurance|100.00|ASSURANCE PNO GA
+t229|2023-12-31|b3|r:loyer|431.00|LOYER FACT GESTION
+t230|2023-12-31|b3|c:autre|484.00|FRAIS DE GESTION
+t231|2023-12-31|b3|c:autre|20.00|FRAIS DE GESTION
+t232|2023-12-31|b4|r:loyer|2184.00|LOYER FACT GESTION
+t233|2023-12-31|b4|c:autre|122.00|FRAIS DE GESTION
+t234|2023-12-31|b4|c:autre|20.00|FRAIS DE GESTION
+t235|2023-12-31|b4|c:autre|184.00|SERVICES EXTERIEURS
+t236|2023-12-31|b2|r:loyer|8912.00|LOYER FACT GESTION
+t237|2023-12-31|b2|c:autre|457.00|FRAIS DE GESTION
+t238|2023-12-31|b2|c:autre|20.00|FRAIS DE GESTION
+t239|2023-12-31|b1|r:loyer|8434.00|LOYER FACT GESTION
+t240|2023-12-31|b1|c:autre|433.00|FRAIS DE GESTION
+t241|2023-12-31|b1|c:autre|20.00|FRAIS DE GESTION
+t242|2023-12-31|b4|r:loyer|6554.10|LOYER FACT AIRBNB
+t243|2023-12-31|b4|c:autre|220.35|FRAIS DE GESTION AIRBNB
+t244|2023-12-31|b1|c:autre|2159.00|AMORTISSEMENTS DES IMMO
+t245|2023-12-31|b2|c:autre|2737.00|AMORTISSEMENTS DES IMMO
+t246|2023-12-31|b4|c:autre|2090.00|AMORTISSEMENTS DES IMMO
+t247|2023-12-31|b3|c:autre|4178.00|AMORTISSEMENTS DES IMMO
+t248|2023-12-31|b1|c:taxe_fonciere|488.26|TAXE FONCIERE
+t249|2023-12-31|b2|c:taxe_fonciere|704.43|TAXE FONCIERE
+t250|2023-12-31|b3|c:taxe_fonciere|1576.59|TAXE FONCIERE
+t251|2023-12-31|b4|c:interets|856.54|INTERETS BANCAIRES
+t252|2023-12-31|b1|c:interets|626.07|INTERETS BANCAIRES
+t253|2023-12-31|b2|c:interets|903.26|INTERETS BANCAIRES
+t254|2023-12-31|b3|c:interets|1337.23|INTERETS BANCAIRES
+t255|2023-05-02|b4|c:entretien|84.87|FOURNITURES DIONEO
+t256|2023-08-18|b4|c:entretien|73.73|FOURNITURES DIONEO
+t257|2023-11-02|b4|c:entretien|71.46|FOURNITURES DIONEO
+t258|2024-01-23|b5|c:entretien|62.94|FOURNITURES DIONEO
+t259|2024-10-22|b5|c:entretien|120.05|FOURNITURES SOSH
+t260|2024-11-21|b5|c:entretien|29.90|FOURNITURES SOSH
+t261|2024-12-23|b5|r:entretien|70.10|REMBOURSEMENT SOSH
+t262|2024-01-15|b3|c:entretien|41.97|FOURNITURES SOSH
+t263|2024-01-17|b4|c:entretien|39.99|FOURNITURES SOSH
+t264|2024-02-13|b3|c:entretien|108.52|FOURNITURES SOSH
+t265|2024-02-19|b4|c:entretien|41.12|FOURNITURES SOSH
+t266|2024-03-13|b3|c:entretien|46.97|FOURNITURES SOSH
+t267|2024-03-19|b4|c:entretien|40.99|FOURNITURES SOSH
+t268|2024-04-15|b3|c:entretien|49.97|FOURNITURES SOSH
+t269|2024-04-17|b4|c:entretien|40.99|FOURNITURES SOSH
+t270|2024-05-15|b3|c:entretien|49.97|FOURNITURES SOSH
+t271|2024-05-17|b4|c:entretien|53.44|FOURNITURES SOSH
+t272|2024-06-13|b3|c:entretien|49.97|FOURNITURES SOSH
+t273|2024-06-18|b4|c:entretien|51.98|FOURNITURES SOSH
+t274|2024-07-15|b3|c:entretien|49.97|FOURNITURES SOSH
+t275|2024-07-17|b4|c:entretien|51.98|FOURNITURES SOSH
+t276|2024-08-13|b3|c:entretien|49.97|FOURNITURES SOSH
+t277|2024-08-20|b4|c:entretien|51.98|FOURNITURES SOSH
+t278|2024-09-13|b3|c:entretien|49.97|FOURNITURES SOSH
+t279|2024-09-17|b4|c:entretien|51.98|FOURNITURES SOSH
+t280|2024-10-15|b3|c:entretien|49.97|FOURNITURES SOSH
+t281|2024-10-17|b4|c:entretien|51.98|FOURNITURES SOSH
+t282|2024-11-14|b3|c:entretien|49.97|FOURNITURES SOSH
+t283|2024-11-19|b4|c:entretien|53.98|FOURNITURES SOSH
+t284|2024-12-13|b3|c:entretien|49.97|FOURNITURES SOSH
+t285|2024-12-17|b4|c:entretien|51.98|FOURNITURES SOSH
+t286|2024-01-18|b3|c:entretien|134.30|FOURNITURES LEROY MERLIN
+t287|2024-01-13|b3|c:entretien|222.55|FOURNITURES LEROY MERLIN
+t288|2024-01-30|b3|c:entretien|37.90|FOURNITURES LEROY MERLIN
+t289|2024-01-20|b3|c:entretien|153.95|FOURNITURES LEROY MERLIN
+t290|2024-01-25|b3|c:entretien|131.77|FOURNITURES LEROY MERLIN
+t291|2024-01-29|b3|c:entretien|187.93|FOURNITURES LEROY MERLIN
+t292|2024-01-31|b3|c:entretien|145.30|FOURNITURES LEROY MERLIN
+t293|2024-01-31|b3|c:mobilier|36.86|DECO CENTRAKOR
+t294|2024-01-11|b3|c:entretien|38.20|FOURNITURES ATELIER BRIKO
+t295|2024-01-08|b3|c:entretien|62.01|FOURNITURES LEADER PRICE
+t296|2024-01-05|b3|c:entretien|126.98|FOURNITURES DEM
+t297|2024-01-27|b3|c:mobilier|151.66|DECO CARREFOUR
+t298|2024-01-31|b3|c:mobilier|54.93|DECO LA FOIRFOUILLE
+t299|2024-01-24|b3|c:entretien|31.50|FOURNITURES ATELIER BRIKO
+t300|2024-01-22|b3|c:autre|133.80|EQUIPEMENT ATELIER BRIKO
+t301|2024-01-09|b3|c:mobilier|67.60|DECO FERMES ET JARDIN
+t302|2024-01-06|b3|c:mobilier|147.95|DECO FERMES ET JARDIN
+t303|2024-01-23|b3|c:entretien|62.94|FOURNITURES DIONEO
+t304|2024-01-20|b3|c:mobilier|127.20|DECO FERMES ET JARDIN
+t305|2024-02-26|b1|c:mobilier|15.90|DECO MR BRICOLAGE
+t306|2024-02-02|b3|c:mobilier|324.19|DECO RAVATE DECO
+t307|2024-02-05|b3|c:mobilier|30.00|DECO DCASA
+t308|2024-02-12|b4|c:eau|300.63|EAU DIONEO
+t309|2024-02-14|b4|c:electricite|262.96|ELECTRICITE EDF
+t310|2024-02-24|b3|c:mobilier|38.50|DECO BANIAN TISSUS
+t311|2024-02-05|b3|c:mobilier|80.00|DECO CONFORAMA
+t312|2024-02-06|b3|c:entretien|15.72|FOURNITURES LEADER PRICE
+t313|2024-02-13|b3|c:entretien|54.65|FOURNITURES LEROY MERLIN
+t314|2024-02-14|b3|c:entretien|61.10|FOURNITURES LEROY MERLIN
+t315|2024-02-15|b3|c:entretien|31.10|FOURNITURES LEROY MERLIN
+t316|2024-02-18|b3|c:entretien|69.80|FOURNITURES LEROY MERLIN
+t317|2024-02-28|b3|c:entretien|15.90|FOURNITURES LEROY MERLIN
+t318|2024-03-07|b3|c:entretien|14.45|FOURNITURES LEADER PRICE
+t319|2024-04-11|b4|c:electricite|341.89|ELECTRICITE EDF
+t320|2024-04-23|b3|c:entretien|100.10|FOURNITURES MR BRICOLAGE
+t321|2024-04-29|b3|c:mobilier|17.98|DECO LA FOIRFOUILLE
+t322|2024-05-02|b3|c:eau|71.07|EAU DIONEO
+t323|2024-05-18|b3|c:entretien|11.99|FOURNITURES LEADER PRICE
+t324|2024-05-09|b3|c:mobilier|206.44|DECO CARREFOUR
+t325|2024-06-17|b3|c:entretien|30.30|FOURNITURES LEADER PRICE
+t326|2024-07-29|b3|c:entretien|51.90|FOURNITURES MR BRICOLAGE
+t327|2024-07-23|b3|c:entretien|134.70|FOURNITURES MR BRICOLAGE
+t328|2024-06-17|b4|c:electricite|347.60|ELECTRICITE EDF
+t329|2024-06-22|b3|c:mobilier|182.50|DECO CONFORAMA
+t330|2024-06-19|b2|c:mobilier|180.00|DECO CONFORAMA
+t331|2024-06-01|b3|c:entretien|124.95|FOURNITURES LEROY MERLIN
+t332|2024-06-09|b3|c:entretien|70.50|FOURNITURES LEROY MERLIN
+t333|2024-06-09|b3|c:entretien|100.00|FOURNITURES LEROY MERLIN
+t334|2024-06-12|b3|c:entretien|16.90|FOURNITURES LEROY MERLIN
+t335|2024-06-22|b3|c:mobilier|62.10|DECO DCASA
+t336|2024-06-10|b3|c:entretien|43.40|FOURNITURES MR BRICOLAGE
+t337|2024-07-02|b2|c:frais_gestion|279.99|ELECTROMENAGER FIRST DECO
+t338|2024-07-14|b4|c:entretien|163.82|FOURNITURES CARREFOUR
+t339|2024-07-23|b4|c:mobilier|99.00|MOBILIER KITM
+t340|2024-07-30|b5|c:travaux|120.00|MATERIAUX ESPACE DECO
+t341|2024-07-16|b5|c:travaux|40.26|MATERIAUX SCPR
+t342|2024-07-15|b5|c:travaux|227.40|MATERIAUX SUPER CATENA
+t343|2024-07-15|b5|c:travaux|41.31|MATERIAUX SCPR
+t344|2024-07-27|b5|c:travaux|124.15|MATERIAUX LEROY MERLIN
+t345|2024-08-03|b3|c:mobilier|182.80|DECO RAVATE DECO
+t346|2024-08-27|b5|c:travaux|108.50|MATERIAUX ATELIER BRIKO
+t347|2024-08-19|b5|c:travaux|29.99|MATERIAUX WELDOM
+t348|2024-08-12|b5|c:travaux|252.50|MATERIAUX ATELIER BRIKO
+t349|2024-08-10|b5|c:entretien|29.90|FOURNITURES WELDOM
+t350|2024-07-30|b5|c:entretien|53.60|FOURNITURES LEROY MERLIN
+t351|2024-07-31|b5|c:entretien|17.20|FOURNITURES LEROY MERLIN
+t352|2024-08-19|b5|c:entretien|199.66|FOURNITURES LEROY MERLIN
+t353|2024-08-19|b5|c:entretien|99.66|FOURNITURES LEROY MERLIN
+t354|2024-08-20|b5|c:travaux|61.80|MATERIAUX LEROY MERLIN
+t355|2024-08-07|b5|c:travaux|51.80|MATERIAUX LEROY MERLIN
+t356|2024-08-09|b5|c:travaux|445.80|MATERIAUX LEROY MERLIN
+t357|2024-08-03|b4|c:entretien|269.00|FOURNITURES MR BRICOLAGE
+t358|2024-08-03|b4|c:mobilier|182.80|DECO RAVATE DECO
+t359|2024-08-07|b5|c:mobilier|79.90|DECO RAVATE DECO
+t360|2024-08-02|b5|c:travaux|59.00|MATERIAUX ESPACE DECO
+t361|2024-08-07|b3|c:mobilier|140.00|MOBILIER RAVATE DECO
+t362|2024-08-08|b5|c:eau|15.12|EAU DIONEO
+t363|2024-08-08|b3|c:eau|153.18|EAU DIONEO
+t364|2024-08-08|b4|c:eau|112.21|EAU DIONEO
+t365|2024-08-16|b4|c:electricite|383.40|ELECTRICITE EDF
+t366|2024-08-28|b3|c:electricite|25.96|ELECTRICITE EDF
+t367|2024-09-04|b3|c:electricite|26.18|ELECTRICITE EDF
+t368|2024-09-13|b4|c:electricite|25.96|ELECTRICITE EDF
+t369|2024-09-14|b5|c:entretien|333.75|FOURNITURES LEROY MERLIN
+t370|2024-09-27|b5|c:entretien|5.15|FOURNITURES LEROY MERLIN
+t371|2024-09-05|b5|c:entretien|289.00|FOURNITURES LEROY MERLIN
+t372|2024-09-27|b3|c:mobilier|69.80|DECO MR BRICOLAGE
+t373|2024-05-13|b3|c:entretien|93.70|FOURNITURES MR BRICOLAGE
+t374|2024-09-30|b5|c:entretien|30.10|FOURNITURES WELDOM
+t375|2024-09-18|b5|c:entretien|42.30|FOURNITURES WELDOM
+t376|2024-10-28|b5|c:entretien|31.55|FOURNITURES DEM
+t377|2024-10-04|b5|c:entretien|8.90|FOURNITURES LEROY MERLIN
+t378|2024-10-04|b5|c:entretien|85.80|FOURNITURES LEROY MERLIN
+t379|2024-10-05|b5|c:entretien|41.90|FOURNITURES LEROY MERLIN
+t380|2024-10-08|b5|c:entretien|87.80|FOURNITURES LEROY MERLIN
+t381|2024-10-19|b5|c:entretien|73.60|FOURNITURES LEROY MERLIN
+t382|2024-10-11|b4|c:electricite|391.34|ELECTRICITE EDF
+t383|2024-10-11|b3|c:electricite|273.49|ELECTRICITE EDF
+t384|2024-10-11|b5|c:electricite|47.90|ELECTRICITE EDF
+t385|2024-10-11|b3|c:electricite|20.44|ELECTRICITE EDF
+t386|2024-10-11|b4|c:mobilier|39.60|DECO LA FOIRFOUILLE
+t387|2024-10-05|b4|c:mobilier|7.50|DECO DCASA
+t388|2024-10-05|b3|c:mobilier|299.00|DECO MOHA
+t389|2024-10-07|b4|c:entretien|37.77|FOURNITURES LEADER PRICE
+t390|2024-10-11|b3|c:mobilier|209.15|DECO DCASA
+t391|2024-10-30|b3|c:entretien|25.75|FOURNITURES LEADER PRICE
+t392|2024-10-28|b3|c:entretien|9.37|FOURNITURES LEADER PRICE
+t393|2024-11-06|b5|c:entretien|124.35|FOURNITURES LEROY MERLIN
+t394|2024-11-12|b5|c:entretien|27.85|FOURNITURES LEROY MERLIN
+t395|2024-11-13|b5|c:entretien|29.80|FOURNITURES LEROY MERLIN
+t396|2024-11-15|b5|c:entretien|131.50|FOURNITURES LEROY MERLIN
+t397|2024-11-16|b5|c:entretien|14.90|FOURNITURES LEROY MERLIN
+t398|2024-11-16|b5|r:entretien|14.90|REMBOURSEMENT LEROY MERLIN
+t399|2024-11-23|b5|c:entretien|30.90|FOURNITURES LEROY MERLIN
+t400|2024-11-04|b5|c:eau|66.00|EAU DIONEO
+t401|2024-11-12|b3|c:entretien|74.57|FOURNITURES LEADER PRICE
+t402|2024-11-27|b3|c:mobilier|86.50|DECO CARREFOUR
+t403|2024-12-17|b5|c:entretien|43.60|FOURNITURES MR BRICOLAGE
+t404|2024-12-14|b4|c:entretien|22.50|FOURNITURES LEADER PRICE
+t405|2024-12-27|b3|c:entretien|35.30|FOURNITURES MR BRICOLAGE
+t406|2024-12-06|b5|c:mobilier|121.40|DECO CONFORAMA
+t407|2024-12-08|b5|c:entretien|168.20|FOURNITURES LEROY MERLIN
+t408|2024-12-16|b3|c:electricite|469.38|ELECTRICITE EDF
+t409|2024-12-16|b4|c:electricite|333.06|ELECTRICITE EDF
+t410|2024-12-16|b3|c:electricite|24.63|ELECTRICITE EDF
+t411|2024-12-16|b5|c:electricite|44.44|ELECTRICITE EDF
+t412|2024-12-23|b4|c:entretien|94.95|FOURNITURES REUNIPOOL
+t413|2024-12-28|b3|c:entretien|8.00|FOURNITURES LDN SPA
+t414|2024-12-28|b3|c:entretien|90.00|FOURNITURES LDN SPA
+t415|2024-12-27|b4|c:entretien|28.98|FOURNITURES PROMONET
+t416|2024-12-31|b5|c:interets|605.71|INTERETS BFC
+t417|2024-12-31|b1|c:interets|596.60|INTERETS BFC
+t418|2024-12-31|b2|c:interets|860.74|INTERETS BFC
+t419|2024-12-31|b3|c:interets|1926.42|INTERETS BFC
+t420|2024-12-31|b4|c:interets|872.41|INTERETS BNP
+t421|2024-12-31|b3|r:loyer|6078.72|RESERVATION BOOKING
+t422|2024-12-31|b3|c:frais_airbnb|972.60|COMMISSION BOOKING
+t423|2024-12-31|b4|r:loyer|7781.21|RESERVATION BOOKING
+t424|2024-12-31|b4|c:frais_airbnb|1245.21|COMMISSION BOOKING
+t425|2024-12-31|b4|r:loyer|19811.60|LOYER AIRBNB
+t426|2024-12-31|b4|c:frais_airbnb|634.78|COMMISSION AIRBNB
+t427|2024-12-31|b3|r:loyer|20005.80|LOYER AIRBNB
+t428|2024-12-31|b3|c:frais_airbnb|606.34|COMMISSION AIRBNB
+t429|2024-12-31|b1|r:loyer|8644.00|LOYER GERANCE
+t430|2024-12-31|b1|c:autre|443.00|FRAIS DE GESTION
+t431|2024-12-31|b2|r:loyer|8885.00|LOYER GERANCE
+t432|2024-12-31|b2|c:autre|905.00|FRAIS DE GESTION
+t433|2024-12-31|b2|c:autre|165.00|SERVICES EXTERIEURS
+t434|2024-12-31|b5|c:assurance|80.29|ASSURANCE PNO
+t435|2024-12-31|b1|c:assurance|137.72|ASSURANCE PNO
+t436|2024-12-31|b2|c:assurance|80.29|ASSURANCE PNO
+t437|2024-12-31|b4|c:assurance|46.48|ASSURANCE PNO
+t438|2024-12-31|b3|c:autre|1621.00|CFE 2024
+t439|2024-12-31|b4|c:autre|900.00|CFE 2023
+t440|2024-12-31|b4|c:taxe_fonciere|4344.00|TAXE FONCIERE 2024
+t441|2024-12-31|b4|c:assurance|331.29|ASSURANCE PRET BNP
+t442|2024-12-31|b5|c:assurance|338.97|ASSURANCE PRET ASSUREA
+t443|2024-12-31|b1|c:assurance|333.88|ASSURANCE PRET ASSUREA
+t444|2024-12-31|b2|c:assurance|481.70|ASSURANCE PRET ASSUREA
+t445|2024-12-31|b3|c:assurance|1078.09|ASSURANCE PRET ASSUREA
+t446|2024-10-02|b4|c:autre|424.78|SERVICES EXTERIEURS VVS
+t447|2024-10-02|b3|c:autre|849.55|SERVICES EXTERIEURS VVS
+t448|2024-11-30|b4|c:autre|376.33|SERVICES EXTERIEURS VVS
+t449|2024-11-30|b3|c:autre|752.67|SERVICES EXTERIEURS VVS
+t450|2024-10-30|b4|c:autre|364.89|SERVICES EXTERIEURS VVS
+t451|2024-10-30|b3|c:autre|729.78|SERVICES EXTERIEURS VVS`;
+
+function parseTx(){
+  return TX_RAW.split('\n').map(l=>{
+    const [id,date,bid,tc,montant,desc]=l.split('|');
+    const [type,categorie]=tc.split(':');
+    return {id,date,bienId:bid,type:type==='r'?'recette':'charge',categorie,montant:parseFloat(montant),fournisseur:'',description:desc||''};
+  });
+}
+
+const CATS=[
+  {v:'loyer',l:'Loyer',c:'706'},{v:'assurance',l:'Assurance',c:'616'},
+  {v:'taxe_fonciere',l:'Taxe foncière',c:'6311'},{v:'charges_copro',l:'Copropriété',c:'615'},
+  {v:'entretien',l:'Entretien/Fournit.',c:'615'},{v:'interets',l:"Intérêts",c:'661'},
+  {v:'frais_gestion',l:'Frais gestion',c:'622'},{v:'frais_compta',l:'Comptable',c:'622'},
+  {v:'electricite',l:'Électricité',c:'606'},{v:'eau',l:'Eau',c:'606'},
+  {v:'frais_airbnb',l:'Airbnb/Booking',c:'623'},{v:'travaux',l:'Travaux/Matériaux',c:'2135'},
+  {v:'mobilier',l:'Mobilier/Déco',c:'2154'},{v:'autre',l:'Autre',c:'627'}
+];
+const TYPES={meuble:'Meublé',airbnb:'Airbnb',travaux:'Travaux'};
+const BD={meuble:'b-m',airbnb:'b-a',travaux:'b-t'};
+
+const PRE_BIENS=[
+  {id:'b1',nom:'APT1 B — Meublé',type:'meuble',adresse:"Immeuble principal, La Réunion",prixAchat:44489.16,fraisNotaire:2583.36,dateDebut:'2021-11-23',travaux:[{label:'Travaux 2021',montant:6126,dateDebut:'2021-06-15',duree:10},{label:'Travaux 2023',montant:1203.36,dateDebut:'2023-04-04',duree:10}]},
+  {id:'b2',nom:'APT1 C — Meublé',type:'meuble',adresse:'Immeuble principal, La Réunion',prixAchat:64186.64,fraisNotaire:3727.14,dateDebut:'2021-12-01',travaux:[{label:'Travaux 2021',montant:6126,dateDebut:'2021-08-15',duree:10}]},
+  {id:'b3',nom:'APT1 D — Airbnb',type:'airbnb',adresse:'Immeuble principal, La Réunion',prixAchat:170000,fraisNotaire:0,dateDebut:'2023-05-01',travaux:[{label:'Travaux démarrage 2023',montant:15564,dateDebut:'2023-05-15',duree:10}]},
+  {id:'b4',nom:'APT1 PLUM — Airbnb',type:'airbnb',adresse:'Immeuble principal, La Réunion',prixAchat:56364,fraisNotaire:3273,dateDebut:'2023-01-01',travaux:[{label:'Démarrage 2023',montant:16997,dateDebut:'2023-01-15',duree:10}]},
+  {id:'b5',nom:'APT1 A — Démarrage',type:'travaux',adresse:'Immeuble principal, La Réunion',prixAchat:50000,fraisNotaire:0,dateDebut:'2024-01-01',travaux:[{label:'Travaux 2024',montant:2000,dateDebut:'2024-07-15',duree:10}]},
+  {id:'b6',nom:'Bien 6 — Future Airbnb',type:'travaux',adresse:'À compléter',prixAchat:0,fraisNotaire:0,dateDebut:'',travaux:[]},
+  {id:'b7',nom:'Bien 7 — Future Airbnb',type:'travaux',adresse:'À compléter',prixAchat:0,fraisNotaire:0,dateDebut:'',travaux:[]},
+  {id:'b8',nom:'Bien 8 — Future Airbnb',type:'travaux',adresse:'À compléter',prixAchat:0,fraisNotaire:0,dateDebut:'',travaux:[]}
+];
+
+const PRE_REP=[
+  {bienId:'b5',nom:'LOG A',surface:38,varangue:10,jardin:0,parking:14,tantieme:2150},
+  {bienId:'b1',nom:'LOG B',surface:40,varangue:5,jardin:2,parking:14,tantieme:2050},
+  {bienId:'b2',nom:'LOG C',surface:36,varangue:10,jardin:30,parking:14,tantieme:2150},
+  {bienId:'b3',nom:'LOG D',surface:70,varangue:9,jardin:100,parking:28,tantieme:3650}
+];
+
+const DUREES=[
+  ['Matériel informatique','3 ans','communément admis'],
+  ['Outillage','5-10 ans','BOI-BIC-AMT-10-40-30'],
+  ['Matériel bureau','5-10 ans','BOI-BIC-AMT-10-40-30'],
+  ['Mobilier général','10 ans','BOI-BIC-AMT-10-40-30'],
+  ['Four électrique','10 ans','communément admis'],
+  ['Meubles meublants','5 ans','communément admis'],
+  ['Climatisation','12-15 ans','durée vie moyenne'],
+  ['Télévision','30 ans','durée vie moyenne'],
+  ['Volet','5 ans','durée vie moyenne'],
+  ['Fenêtres PVC','25 ans','durée vie moyenne'],
+  ['Fenêtres bois','15 ans','durée vie moyenne'],
+  ['Porte','20 ans','durée vie moyenne'],
+  ['Logiciel','2 ans','communément admis'],
+  ['Matelas','10 ans','durée vie moyenne'],
+  ['Installation électrique','10-20 ans','BOI-BIC-AMT-10-40-10'],
+  ['Ravalement façade','10 ans',''],
+  ['Remplacement façade','40 ans',''],
+  ['Structure / Gros œuvre','50 ans','composantes immo']
+];
+
+const CHARGES_OK=[
+  [1,"Honoraires notaire","autres"],[2,"Frais insertion/affiches","autres"],[3,"Droits mutation","autres"],
+  [4,"Frais adjudication","autres"],[5,"Commissions intermédiaire","autres"],[6,"Droits succession","autres"],
+  [7,"Droits donation","autres"],[8,"Droits enregistrement","autres"],[9,"Recherche appart.","autres"],
+  [10,"Intermédiaire crédit","autres"],[11,"Intérêts emprunt","intérêts"],[12,"Taxe foncière","taxes"],
+  [13,"CFE","taxes"],[14,"Taxe habitation","taxes"],[15,"Charges copropriété","autres"],
+  [16,"Assurance prêt","autres"],[17,"Assurance PNO","autres"],[18,"Assurance loyers impayés","autres"],
+  [19,"Réparations","autres"],[20,"Mobilier","autres"],[21,"Travaux","autres"],
+  [22,"Matériel nettoyage","autres"],[23,"Architecte intérieur","autres"],[24,"Plombier","autres"],
+  [25,"Peintre","autres"],[26,"Intervenants divers","autres"],[27,"Matériel informatique","autres"],
+  [28,"Outillage","autres"],[29,"Meubles bureau","autres"],[30,"Logiciel gestion immo","autres"],
+  [31,"Logiciel bureautique","autres"],[32,"Logiciel comptabilité","autres"],[33,"Logiciel photo/vidéo","autres"],
+  [34,"Logiciel signature","autres"],[35,"Formation","autres"],[36,"Appareil photo/vidéo","autres"],
+  [37,"Photographe pro","autres"],[38,"Conciergerie","autres"],[39,"Femme de ménage","autres"],
+  [40,"Concierges/gardiens","autres"],[41,"Frais postaux","autres"],[42,"Électricité","autres"],
+  [43,"Gaz","autres"],[44,"Eau","autres"],[45,"Téléphone","autres"],
+  [46,"Internet","autres"],[47,"Abonnement TV","autres"],[48,"Netflix/streaming","autres"],
+  [49,"Déplacements gestion","autres"],[50,"Déplacements investissement","autres"],[51,"Péages","autres"],
+  [52,"Cabinet comptable","autres"],[53,"OGA/CGA","autres"],[54,"Fiscaliste","autres"],
+  [55,"Procédure litige","autres"],[56,"Avocat","autres"],[57,"Médiateur","autres"],
+  [58,"Huissier","autres"],[59,"Barème carburant","autres"],[60,"Annonces site","autres"],
+  [61,"Publicité","autres"],[62,"Imprimante","autres"],[63,"Papier","autres"],
+  [64,"Cartouches encre","autres"],[65,"Agrafeuse","autres"],[66,"Stylos","autres"],
+  [67,"Enveloppes","autres"],[68,"Frais de port","autres"],[69,"DPE","autres"],
+  [70,"Diagnostics divers","autres"],[71,"Compte bancaire dédié","autres"],[72,"Frais dossier bancaire","autres"],
+  [73,"Cadeau banquier","autres"],[74,"Alarme","autres"],[75,"Montage meubles","autres"],
+  [76,"Crédit Logement","intérêts"],[77,"Gestion compte","autres"],[78,"Blanchisserie","autres"],
+  [79,"Événement immobilier","autres"],[80,"AGE/règlement copro","autres"],[81,"Balcons/terrasses","autres"],
+  [82,"Assurance décès-invalidité prêt","autres"]
+];
+
+const PRE_SOURCES=[
+  {id:'s1',cat:'officiel',name:'impots.gouv.fr — Location meublée',url:'https://www.impots.gouv.fr/particulier/les-regimes-dimposition',ref:'',desc:'Régimes LMNP/LMP.',verified:'2026-04-15'},
+  {id:'s2',cat:'bofip',name:'BOFiP — BIC Location meublée',url:'https://bofip.impots.gouv.fr/bofip/5877-PGP.html',ref:'BOI-BIC-CHAMP-40-20',desc:'Doctrine fiscale.',verified:'2026-04-15'},
+  {id:'s3',cat:'bofip',name:'BOFiP — Amortissements 39C',url:'https://bofip.impots.gouv.fr/bofip/1843-PGP.html',ref:'BOI-BIC-AMT-20-40-10',desc:'Règles déductibilité.',verified:'2026-03-01'},
+  {id:'s4',cat:'bofip',name:'BOFiP — Charges déductibles',url:'https://bofip.impots.gouv.fr/bofip/1846-PGP.html',ref:'BOI-BIC-CHG',desc:'82 charges déductibles.',verified:'2026-04-17'},
+  {id:'s5',cat:'bofip',name:'BOFiP — Durées amort.',url:'http://bofip.impots.gouv.fr/bofip/4520-PGP',ref:'BOI-BIC-AMT-10-40-30',desc:'Durées normales.',verified:'2026-04-17'},
+  {id:'s6',cat:'loi',name:'LF 2025 art. 84 — Plus-value',url:'https://www.legifrance.gouv.fr/loda/id/JORFTEXT000051168007',ref:'Loi n° 2025-127',desc:'Réintégration amort. 15/02/2025.',verified:'2026-02-14'},
+  {id:'s7',cat:'loi',name:'Loi Le Meur 2024',url:'https://www.legifrance.gouv.fr',ref:'Loi n° 2024-1039',desc:'Micro-BIC tourisme.',verified:'2025-01-01'},
+  {id:'s8',cat:'officiel',name:'service-public.fr',url:'https://www.service-public.gouv.fr/particuliers/vosdroits/F32744',ref:'CGI art. 155 IV',desc:'Guide DGFiP.',verified:'2026-04-15'},
+  {id:'s9',cat:'social',name:'URSSAF — Économie collaborative',url:'https://www.urssaf.fr/accueil/services/economie-collaborative.html',ref:'CSS L611-1',desc:'Airbnb > 23K€ = SSI.',verified:'2026-04-01'},
+  {id:'s10',cat:'social',name:'URSSAF — Réforme TNS',url:'https://www.urssaf.fr/accueil/independant/comprendre-payer-cotisations/reforme-cotisations-independants.html',ref:'LFSS 2024 art. 18',desc:'Abattement 26 %.',verified:'2025-01-01'},
+  {id:'s11',cat:'loi',name:'LFSS 2026 — CSG 18,6 %',url:'https://www.legifrance.gouv.fr',ref:'LOI n° 2025-1403',desc:'PS LMNP 18,6 %.',verified:'2026-01-01'},
+  {id:'s12',cat:'dom',name:'BOFiP — Abattement IR DOM',url:'https://bofip.impots.gouv.fr/bofip/4618-PGP.html',ref:'BOI-IR-LIQ-20-30',desc:'30 % max 2 450 €.',verified:'2024-01-01'},
+  {id:'s13',cat:'dom',name:'BOFiP — TVA DOM',url:'https://bofip.impots.gouv.fr/bofip/343-PGP.html',ref:'BOI-TVA-GEO-20-10',desc:'TVA 8,5 % / 2,1 %.',verified:'2024-01-01'},
+  {id:'s14',cat:'dom',name:'Fiscalité DOM',url:'https://www.impots.gouv.fr/professionnel/impots-professionnels-dom',ref:'CGI 1466 F',desc:'ZFANG, Girardin.',verified:'2024-03-07'},
+  {id:'s15',cat:'officiel',name:'Légifrance — CGI',url:'https://www.legifrance.gouv.fr/codes/texte_lc/LEGITEXT000006069577/',ref:'CGI',desc:'Code Général Impôts.',verified:'2026-05-01'},
+  {id:'s16',cat:'jurisprudence',name:'CE 14/11/2025 — Indivision',url:'https://www.legifrance.gouv.fr',ref:'CE n° 495516',desc:'Micro-BIC indivision.',verified:'2025-11-14'},
+  {id:'s17',cat:'officiel',name:'INPI — Guichet unique',url:'https://procedures.inpi.fr/?/',ref:'CGI 1649 quater B',desc:'Immatriculation LMNP.',verified:'2026-01-01'}
+];
+
+const PRE_NOTIFS=[
+  {id:'n1',type:'urgent',title:'⚠️ Bascule LMP 2024',desc:'Recettes 2024 = 74 369 € > revenus pro 68 000 €. 2 seuils LMP franchis.',time:'2026-01-15',dismissed:false},
+  {id:'n2',type:'urgent',title:'📬 URSSAF Airbnb 2026',desc:'Airbnb 56 839 € > 23 000 €. Affiliation SSI obligatoire.',time:'2026-01-15',dismissed:false},
+  {id:'n3',type:'warn',title:'📅 Liasse 2031 — 20 mai',desc:'Délai EDI-TDFC : 20/05/2026 pour revenus 2025.',time:'2026-05-19',dismissed:false},
+  {id:'n4',type:'warn',title:'⚡ Conservez 2033-C',desc:'LF 2025 art. 84 — Archives obligatoires.',time:'2025-02-15',dismissed:false},
+  {id:'n5',type:'info',title:'🏝 Abattement IR DOM 30 %',desc:'Max 2 450 € automatique sur 2042.',time:'2026-03-01',dismissed:false},
+  {id:'n6',type:'info',title:'📈 PS 18,6 % en 2026',desc:'LFSS 2026 — +1,4 pt CSG.',time:'2026-01-01',dismissed:false},
+  {id:'n7',type:'info',title:'📊 Déficits 2023 reportables',desc:'APT 1D : −15 133 € | PLUM : −8 184 €. Total : 23 317 € reportables 10 ans.',time:'2026-01-01',dismissed:false}
+];
+
+let state={view:'dash',annee:'2024',biens:[],tx:[],rep:[],sources:[],notifs:[],checks:[],lastCheck:null,profil:{territory:'reunion',siret:'',regimeTVA:'franchise'},srcFilter:'all',chgSearch:'',pvData:{prixAcq:200000,prixCes:400000,loyers:70000,duree:8,tmi:0.11,fraisAcq:7.5,travauxPct:15,terrain:15,augmAmort:3},loading:true,sbOpen:false};
+
+async function load(){
+  const V='v3.1';
+  try{
+    const v=await __storage.get('lmnp_version');
+    if(!v?.value||v.value!==V){
+      state.biens=[...PRE_BIENS];state.tx=parseTx();state.rep=[...PRE_REP];
+      state.sources=[...PRE_SOURCES];state.notifs=[...PRE_NOTIFS];
+      await Promise.all([
+        __storage.set('lmnp_version',V),
+        __storage.set('lmnp_biens',JSON.stringify(state.biens)),
+        __storage.set('lmnp_tx',JSON.stringify(state.tx)),
+        __storage.set('lmnp_rep',JSON.stringify(state.rep)),
+        __storage.set('lmnp_sources',JSON.stringify(state.sources)),
+        __storage.set('lmnp_notifs',JSON.stringify(state.notifs))
+      ]);
+    } else {
+      const ks=['lmnp_biens','lmnp_tx','lmnp_rep','lmnp_sources','lmnp_notifs','lmnp_profil','lmnp_annee'];
+      const r=await Promise.allSettled(ks.map(k=>__storage.get(k)));
+      if(r[0].value?.value) state.biens=JSON.parse(r[0].value.value);
+      if(r[1].value?.value) state.tx=JSON.parse(r[1].value.value);
+      if(r[2].value?.value) state.rep=JSON.parse(r[2].value.value);
+      if(r[3].value?.value) state.sources=JSON.parse(r[3].value.value);
+      if(r[4].value?.value) state.notifs=JSON.parse(r[4].value.value);
+      if(r[5].value?.value) state.profil=JSON.parse(r[5].value.value);
+      if(r[6].value?.value){state.annee=r[6].value.value;document.getElementById('ys').value=state.annee;}
+    }
+  }catch(e){
+    state.biens=[...PRE_BIENS];state.tx=parseTx();state.rep=[...PRE_REP];
+    state.sources=[...PRE_SOURCES];state.notifs=[...PRE_NOTIFS];
+  }
+  state.loading=false;runChecks(true);render();
+}
+
+async function save(k,d){try{await __storage.set(k,typeof d==='string'?d:JSON.stringify(d));}catch(e){}}
+function fmt(n){return new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0}).format(n||0);}
+function fmtN(n,d=0){return new Intl.NumberFormat('fr-FR',{minimumFractionDigits:d,maximumFractionDigits:d}).format(n||0);}
+function getTx(bid,y){return state.tx.filter(t=>(bid==='all'||t.bienId===bid)&&new Date(t.date).getFullYear().toString()===y);}
+function getRec(bid,y){return getTx(bid,y).filter(t=>t.type==='recette').reduce((s,t)=>s+parseFloat(t.montant||0),0);}
+function getChg(bid,y){return getTx(bid,y).filter(t=>t.type==='charge').reduce((s,t)=>s+parseFloat(t.montant||0),0);}
+
+function calcAmort(b,annee){
+  if(!b.prixAchat||!b.dateDebut)return 0;
+  const base=parseFloat(b.prixAchat)+(parseFloat(b.fraisNotaire)||0);
+  const amort=base*0.85;
+  const yd=new Date(b.dateDebut).getFullYear();
+  const yr=parseInt(annee);
+  const md=new Date(b.dateDebut).getMonth();
+  const pr1=(12-md)/12;
+  let dot=0;
+  [{p:0.40,d:50},{p:0.15,d:40},{p:0.15,d:25},{p:0.15,d:15}].forEach(c=>{
+    const an=amort*c.p/c.d;
+    if(yr>=yd&&yr<yd+c.d)dot+=an*(yr===yd?pr1:1);
+  });
+  (b.travaux||[]).forEach(t=>{
+    if(!t.montant||!t.dateDebut)return;
+    const yt=new Date(t.dateDebut).getFullYear();
+    const mdt=new Date(t.dateDebut).getMonth();
+    const prt=(12-mdt)/12;
+    if(yr>=yt&&yr<yt+(t.duree||10))dot+=(parseFloat(t.montant)/(t.duree||10))*(yr===yt?prt:1);
+  });
+  return Math.round(dot*100)/100;
+}
+
+function toggleSB(){state.sbOpen=!state.sbOpen;document.getElementById('sb').classList.toggle('open',state.sbOpen);document.getElementById('bk').classList.toggle('show',state.sbOpen);}
+
+function nav(v){
+  state.view=v;
+  const vs=['dash','biens','tx','scan','amort','rep','fiscal','forms','iy','dur','chg','pv','terr','src','notifs','chk'];
+  document.querySelectorAll('.ni').forEach((el,i)=>el.classList.toggle('active',vs[i]===v));
+  const t={dash:['Dashboard','ti-dashboard'],biens:['Mes biens','ti-building-estate'],tx:['Transactions','ti-list'],scan:['Scan facture','ti-camera'],amort:['Amortissements','ti-chart-line'],rep:['Répartition','ti-scale'],fiscal:['Résultat fiscal','ti-receipt-tax'],forms:['Formulaires','ti-file-text'],iy:['Inter-années','ti-arrows-double-ne-sw'],dur:['Durées amort.','ti-clock-hour-3'],chg:['Charges','ti-checklist'],pv:['Plus-value','ti-calculator'],terr:['Profil','ti-map-pin'],src:['Sources','ti-books'],notifs:['Notifications','ti-bell'],chk:['Contrôle','ti-shield-check']};
+  document.getElementById('title').innerHTML=`<i class="ti ${t[v][1]}" aria-hidden="true"></i><span>${t[v][0]}</span>`;
+  document.getElementById('action-btn').style.display=['scan','amort','fiscal','forms','iy','dur','chg','pv','terr','notifs','chk'].includes(v)?'none':'inline-flex';
+  if(state.sbOpen)toggleSB();
+  render();
+}
+
+function mainAction(){
+  if(['biens','dash'].includes(state.view))showBienModal();
+  else if(state.view==='tx')showTxModal();
+  else if(state.view==='rep')showRepModal();
+  else if(state.view==='src')showAddSrc();
+}
+
+function updateCounters(){
+  document.getElementById('nb-biens').textContent=state.biens.length;
+  document.getElementById('nb-tx').textContent=state.tx.length;
+  const un=state.notifs.filter(n=>!n.dismissed).length;
+  const el=document.getElementById('nb-notifs');
+  el.textContent=un||'';el.style.display=un>0?'':'none';
+  const e=state.checks.filter(c=>c.sev==='erreur'||c.sev==='avert').length;
+  document.getElementById('nb-chk').textContent=e||'✓';
+}
+
+async function runChecks(silent){
+  const checks=[];const annee=state.annee;
+  state.biens.forEach(b=>{
+    if(!b.prixAchat)checks.push({sev:'erreur',title:`"${b.nom}" — Prix manquant`,desc:'Requis pour amortissements.',ref:'CGI art. 39'});
+    if(!b.dateDebut)checks.push({sev:'erreur',title:`"${b.nom}" — Date début manquante`,desc:'Prorata amort. impossible.',ref:''});
+    if(b.type!=='travaux'&&getRec(b.id,annee)===0)
+      checks.push({sev:'avert',title:`"${b.nom}" — Pas de recette ${annee}`,desc:'Bien actif sans recettes.',ref:''});
+  });
+  // Cohérence inter-années
+  ['2021','2022','2023','2024'].forEach((y,i,arr)=>{
+    if(i===0)return;
+    const py=arr[i-1];
+    state.biens.forEach(b=>{
+      if(b.type==='travaux')return;
+      const r=getRec(b.id,y),pr=getRec(b.id,py);
+      if(r>0&&pr>0&&Math.abs((r-pr)/pr*100)>50)
+        checks.push({sev:'avert',title:`${b.nom} — Variation loyers ${py}→${y}`,desc:`${fmt(pr)} → ${fmt(r)} (${(r-pr>0?'+':'')}${((r-pr)/pr*100).toFixed(0)}%). À vérifier.`,ref:''});
+    });
+  });
+  const recAir=state.biens.filter(b=>b.type==='airbnb').reduce((s,b)=>s+getRec(b.id,annee),0);
+  if(recAir>23000)checks.push({sev:'erreur',title:`⚠️ URSSAF Airbnb ${fmt(recAir)} > 23 000 €`,desc:'Affiliation SSI obligatoire.',ref:'CSS L611-1'});
+  const tR=state.biens.reduce((s,b)=>s+getRec(b.id,annee),0);
+  if(tR>23000&&tR>68000)checks.push({sev:'erreur',title:`⚠️ Bascule LMP — ${fmt(tR)} > 68 K€`,desc:'2 seuils LMP franchis.',ref:'CGI 155 IV'});
+  else if(tR>23000)checks.push({sev:'info',title:`Seuil 1 atteint (${fmt(tR)})`,desc:'LMNP maintenu.',ref:''});
+  if(!state.profil.siret)checks.push({sev:'avert',title:'SIRET manquant',desc:'Requis pour EDI-TDFC.',ref:''});
+  if(checks.filter(c=>c.sev==='erreur').length===0)checks.push({sev:'ok',title:'✅ Pas d\'erreur critique',desc:'Données cohérentes.',ref:''});
+  state.checks=checks;state.lastCheck=new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  updateCounters();if(!silent)render();
+}
+
+function render(){
+  const c=document.getElementById('ct');updateCounters();
+  if(state.loading){c.innerHTML='<div class="empty"><i class="ti ti-loader-2" aria-hidden="true"></i>Chargement...</div>';return;}
+  const v=state.view;
+  ({dash:renderDash,biens:renderBiens,tx:renderTx,scan:renderScan,amort:renderAmort,rep:renderRep,fiscal:renderFiscal,forms:renderForms,iy:renderIY,dur:renderDur,chg:renderChg,pv:renderPV,terr:renderTerr,src:renderSrc,notifs:renderNotifs,chk:renderChk}[v])(c);
+}
+
+function renderDash(c){
+  const annee=state.annee,prev=(parseInt(annee)-1).toString();
+  const tR=state.biens.reduce((s,b)=>s+getRec(b.id,annee),0);
+  const tRp=state.biens.reduce((s,b)=>s+getRec(b.id,prev),0);
+  const tC=state.biens.reduce((s,b)=>s+getChg(b.id,annee),0);
+  const tCp=state.biens.reduce((s,b)=>s+getChg(b.id,prev),0);
+  const tA=state.biens.reduce((s,b)=>s+calcAmort(b,annee),0);
+  const tAp=state.biens.reduce((s,b)=>s+calcAmort(b,prev),0);
+  const resApresA=tR-tC-tA;
+  const resF=Math.max(0,resApresA);
+  const def=resApresA<0?Math.abs(resApresA):0;
+  const totL=state.tx.filter(t=>t.categorie==='loyer'&&t.type==='recette'&&new Date(t.date).getFullYear().toString()===annee).reduce((s,t)=>s+t.montant,0);
+  const pct1=Math.min(100,(totL/23000)*100);
+  const pct2=Math.min(100,(totL/68000)*100);
+  const diff=(a,b)=>a===0?(b>0?'NEW':'—'):((b-a)/a*100).toFixed(0)+'%';
+  c.innerHTML=`
+  <div class="te"><i class="ti ti-map-pin" aria-hidden="true"></i><strong>La Réunion (DOM)</strong><span class="bdg">Avantages actifs</span></div>
+  <div class="cmp-grid">
+    <div class="cmp-c"><div class="cmp-l">Recettes</div><div class="cmp-2y"><span class="cmp-v">${fmt(tR)}</span><span class="cmp-d ${tR>=tRp?'up':'dn'}">${diff(tRp,tR)}</span></div><div class="kpi-s">vs ${prev}: ${fmt(tRp)}</div></div>
+    <div class="cmp-c"><div class="cmp-l">Charges</div><div class="cmp-2y"><span class="cmp-v">${fmt(tC)}</span><span class="cmp-d ${tC<=tCp?'up':'dn'}">${diff(tCp,tC)}</span></div><div class="kpi-s">vs ${prev}: ${fmt(tCp)}</div></div>
+    <div class="cmp-c"><div class="cmp-l">Amort.</div><div class="cmp-2y"><span class="cmp-v">${fmt(tA)}</span></div><div class="kpi-s">vs ${prev}: ${fmt(tAp)}</div></div>
+    <div class="cmp-c"><div class="cmp-l">Résultat</div><div class="cmp-2y"><span class="cmp-v" style="color:${resF>0?'#1a7a4a':'#c0392b'}">${fmt(resF)}</span></div><div class="kpi-s">${def>0?fmt(def)+' déficit':''}</div></div>
+  </div>
+  <div class="al ${totL>68000?'al-d':totL>23000?'al-w':'al-i'}"><strong>Surveillance LMP ${annee}</strong><br>
+    Seuil 1 (23 K€) : ${fmt(totL)} → ${pct1.toFixed(0)}% ${totL>23000?'⚠️':''}
+    <div class="lpb"><div class="lpf" style="width:${pct1}%;background:${pct1>=100?'#c0392b':'#185fa5'}"></div></div>
+    Seuil 2 (68 K€) : ${pct2.toFixed(0)}% ${totL>68000?'⚠️':''}
+    <div class="lpb"><div class="lpf" style="width:${pct2}%;background:${pct2>=100?'#c0392b':'#185fa5'}"></div></div>
+  </div>
+  <div class="st"><i class="ti ti-building" aria-hidden="true"></i>Par bien — ${annee}</div>
+  <div class="tw"><table><thead><tr><th>Bien</th><th>Type</th><th style="text-align:right">Rec.</th><th style="text-align:right">Ch.</th><th style="text-align:right">Am.</th><th style="text-align:right">Résultat</th></tr></thead>
+    <tbody>${state.biens.map(b=>{const r=getRec(b.id,annee),ch=getChg(b.id,annee),am=calcAmort(b,annee),re=r-ch-am;
+      return `<tr><td><strong>${b.nom.split(' — ')[0]}</strong></td><td><span class="bg ${BD[b.type]}">${TYPES[b.type]}</span></td><td style="text-align:right" class="tr-r">${fmt(r)}</td><td style="text-align:right" class="tr-c">${fmt(ch)}</td><td style="text-align:right">${fmt(am)}</td><td style="text-align:right;font-weight:500" class="${re>=0?'tr-r':'tr-c'}">${fmt(re)}</td></tr>`;
+    }).join('')}<tr style="background:var(--color-background-secondary);font-weight:500"><td colspan="2">Total</td><td style="text-align:right" class="tr-r">${fmt(tR)}</td><td style="text-align:right" class="tr-c">${fmt(tC)}</td><td style="text-align:right">${fmt(tA)}</td><td style="text-align:right">${fmt(tR-tC-tA)}</td></tr></tbody></table></div>`;
+}
+
+function renderIY(c){
+  const annees=['2021','2022','2023','2024'];
+  const rows=state.biens.map(b=>({nom:b.nom.split(' — ')[0],type:b.type,data:annees.map(y=>({rec:getRec(b.id,y),chg:getChg(b.id,y),am:calcAmort(b,y)}))})).filter(r=>r.data.some(d=>d.rec>0||d.chg>0));
+  const tots=annees.map(y=>({rec:state.biens.reduce((s,b)=>s+getRec(b.id,y),0),chg:state.biens.reduce((s,b)=>s+getChg(b.id,y),0),am:state.biens.reduce((s,b)=>s+calcAmort(b,y),0)}));
+  c.innerHTML=`<div class="al al-i">Comparatif 2021-2024 sur l'ensemble du patrimoine LMNP.</div>
+  <div class="iy">${annees.map((y,i)=>{const net=tots[i].rec-tots[i].chg-tots[i].am;return `<div class="iy-c"><div class="yl">Rec ${y}</div><div class="yv tr-r">${fmt(tots[i].rec)}</div><div class="yd">Net: <span style="color:${net>=0?'#1a7a4a':'#c0392b'}">${fmt(net)}</span></div></div>`;}).join('')}
+  <div class="iy-c" style="background:#185fa5;color:#fff"><div class="yl" style="color:#fff;opacity:0.85">Total 4 ans</div><div class="yv">${fmt(tots.reduce((s,t)=>s+t.rec,0))}</div><div class="yd" style="color:#fff;opacity:0.85">${state.tx.length} tx</div></div></div>
+  <div class="st"><i class="ti ti-chart-bar" aria-hidden="true"></i>Loyers par bien et année</div>
+  <div class="tw"><table><thead><tr><th>Bien</th>${annees.map(y=>`<th style="text-align:right">${y}</th>`).join('')}<th style="text-align:right">Tendance</th></tr></thead>
+    <tbody>${rows.map(r=>{const recs=r.data.map(d=>d.rec);const valid=recs.filter(x=>x>0);const trend=valid.length<2?'—':valid[valid.length-1]>=valid[0]?'↗':'↘';
+      return `<tr><td><strong>${r.nom}</strong></td>${recs.map(re=>`<td style="text-align:right" class="${re>0?'tr-r':''}">${re>0?fmt(re):'—'}</td>`).join('')}<td style="text-align:right;font-size:15px">${trend}</td></tr>`;
+    }).join('')}</tbody></table></div>
+  <div class="st" style="margin-top:14px"><i class="ti ti-chart-bar" aria-hidden="true"></i>Résultat fiscal par bien</div>
+  <div class="tw"><table><thead><tr><th>Bien</th>${annees.map(y=>`<th style="text-align:right">${y}</th>`).join('')}<th style="text-align:right">Cumul</th></tr></thead>
+    <tbody>${rows.map(r=>{const nets=r.data.map(d=>d.rec-d.chg-d.am);const cum=nets.reduce((s,n)=>s+n,0);
+      return `<tr><td><strong>${r.nom}</strong></td>${nets.map(n=>`<td style="text-align:right" class="${n>=0?'tr-r':'tr-c'}">${fmt(n)}</td>`).join('')}<td style="text-align:right;font-weight:500" class="${cum>=0?'tr-r':'tr-c'}">${fmt(cum)}</td></tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+
+function renderBiens(c){
+  c.innerHTML=state.biens.map(b=>{const r=getRec(b.id,state.annee),ch=getChg(b.id,state.annee),am=calcAmort(b,state.annee);
+    return `<div class="bc" onclick="showBienModal('${b.id}')"><div class="bch">
+      <div style="flex:1;min-width:0"><div style="font-weight:500">${b.nom}</div><div style="font-size:11px;color:var(--color-text-tertiary);margin-top:2px">${b.adresse||'—'}</div></div>
+      <div style="display:flex;gap:6px;align-items:center;flex-shrink:0"><span class="bg ${BD[b.type]}">${TYPES[b.type]}</span><button class="btn btn-d" onclick="event.stopPropagation();delBien('${b.id}')"><i class="ti ti-trash" aria-hidden="true"></i></button></div>
+    </div><div class="bs"><div class="sm"><div class="l">Prix</div><div class="v">${fmt(b.prixAchat)}</div></div><div class="sm"><div class="l">Rec ${state.annee}</div><div class="v tr-r">${fmt(r)}</div></div><div class="sm"><div class="l">Ch ${state.annee}</div><div class="v tr-c">${fmt(ch)}</div></div><div class="sm"><div class="l">Am ${state.annee}</div><div class="v">${fmt(am)}</div></div></div></div>`;
+  }).join('');
+}
+
+function renderTx(c){
+  const txs=getTx('all',state.annee).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(txs.length===0){c.innerHTML=`<div class="empty"><i class="ti ti-list" aria-hidden="true"></i>Aucune transaction ${state.annee}</div>`;return;}
+  c.innerHTML=`<div style="font-size:11.5px;color:var(--color-text-secondary);margin-bottom:8px">${txs.length} tx · Rec: ${fmt(txs.filter(t=>t.type==='recette').reduce((s,t)=>s+t.montant,0))} · Ch: ${fmt(txs.filter(t=>t.type==='charge').reduce((s,t)=>s+t.montant,0))}</div>
+  <div class="tw"><table><thead><tr><th>Date</th><th>Bien</th><th>Catégorie</th><th>Description</th><th style="text-align:right">Montant</th><th></th></tr></thead>
+    <tbody>${txs.slice(0,300).map(t=>{const b=state.biens.find(x=>x.id===t.bienId);const cat=CATS.find(x=>x.v===t.categorie);
+      return `<tr><td>${new Date(t.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})}</td><td>${b?b.nom.split(' — ')[0]:'—'}</td><td><span class="tag">${cat?cat.l:t.categorie}</span></td><td style="color:var(--color-text-secondary);font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${t.description||'—'}</td><td style="text-align:right;font-weight:500" class="${t.type==='recette'?'tr-r':'tr-c'}">${t.type==='recette'?'+':'−'} ${fmt(t.montant)}</td><td><button class="btn btn-d" onclick="delTx('${t.id}')"><i class="ti ti-trash" aria-hidden="true"></i></button></td></tr>`;
+    }).join('')}</tbody></table></div>${txs.length>300?`<div style="text-align:center;font-size:11px;color:var(--color-text-tertiary);padding:8px">300 premières affichées · ${txs.length-300} masquées</div>`:''}`;
+}
+
+function renderScan(c){
+  c.innerHTML=`<div class="al al-i">📸 Prenez une photo de votre facture avec l'appareil photo de votre smartphone, l'IA Claude l'analyse et pré-remplit l'écriture.</div>
+    <div class="sz"><i class="ti ti-camera" aria-hidden="true"></i><p><strong>Sélectionnez :</strong></p>
+      <div class="scan-actions">
+        <div class="scan-btn" onclick="document.getElementById('fi-cam').click()"><i class="ti ti-camera" aria-hidden="true"></i><div>Prendre une photo</div><div style="font-size:10px;color:var(--color-text-tertiary);margin-top:3px">Caméra arrière</div></div>
+        <div class="scan-btn" onclick="document.getElementById('fi-up').click()"><i class="ti ti-upload" aria-hidden="true"></i><div>Importer fichier</div><div style="font-size:10px;color:var(--color-text-tertiary);margin-top:3px">JPG, PNG</div></div>
+      </div>
+    </div>
+    <input type="file" id="fi-cam" accept="image/*" capture="environment" style="display:none" onchange="handleScan(this)">
+    <input type="file" id="fi-up" accept="image/*" style="display:none" onchange="handleScan(this)">
+    <div id="sr"></div>`;
+}
+
+async function handleScan(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=document.getElementById('sr');
+  r.innerHTML='<div class="rc" style="text-align:center;padding:18px"><i class="ti ti-loader-2" style="font-size:22px;display:block;margin-bottom:6px" aria-hidden="true"></i><div style="font-size:12px">Analyse IA...</div></div>';
+  try{
+    const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(',')[1]);fr.onerror=rej;fr.readAsDataURL(f);});
+    const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+      model:"claude-sonnet-4-20250514",max_tokens:600,
+      messages:[{role:"user",content:[{type:"image",source:{type:"base64",media_type:f.type||'image/jpeg',data:b64}},{type:"text",text:`Analyse cette facture (LMNP La Réunion, TVA 8.5%). Retourne UNIQUEMENT JSON valide sans markdown: {"date":"YYYY-MM-DD","fournisseur":"...","description":"libellé court","montant_ht":0,"tva":0,"montant_ttc":0,"categorie":"assurance|taxe_fonciere|charges_copro|entretien|interets|frais_gestion|electricite|eau|frais_airbnb|travaux|mobilier|autre","type":"charge|recette"}`}]}]})});
+    const data=await resp.json();
+    const txt=data.content?.find(x=>x.type==='text')?.text||'';
+    const res=JSON.parse(txt.replace(/```json|```/g,'').trim());
+    const cat=CATS.find(x=>x.v===res.categorie)||CATS[CATS.length-1];
+    r.innerHTML=`<div class="al al-s">✓ Facture analysée</div><div class="rc"><div style="font-weight:500;margin-bottom:6px"><i class="ti ti-file-invoice" aria-hidden="true"></i> Résultat IA</div>
+      <div class="ff"><span>Date</span><span>${res.date||'—'}</span></div><div class="ff"><span>Fournisseur</span><span>${res.fournisseur||'—'}</span></div>
+      <div class="ff"><span>Description</span><span>${res.description||'—'}</span></div><div class="ff"><span>HT</span><span>${fmt(res.montant_ht)}</span></div>
+      <div class="ff"><span>TVA</span><span>${fmt(res.tva)}</span></div><div class="ff"><span>TTC</span><span style="font-size:14px">${fmt(res.montant_ttc)}</span></div>
+      <div class="ff"><span>Catégorie</span><span><span class="tag">${cat.l}</span></span></div></div>
+      <div style="display:flex;gap:6px;justify-content:flex-end">
+        <button class="btn" onclick="document.getElementById('sr').innerHTML='';document.getElementById('fi-cam').value='';document.getElementById('fi-up').value=''">Recommencer</button>
+        <button class="btn btn-p" onclick='showTxModal(${JSON.stringify({date:res.date,type:res.type||"charge",categorie:res.categorie,montant:res.montant_ttc,fournisseur:res.fournisseur,description:res.description})})'><i class="ti ti-check" aria-hidden="true"></i>Créer écriture</button>
+      </div>`;
+  }catch(e){r.innerHTML='<div class="al al-d">Erreur : '+e.message+'</div>';}
+}
+
+function renderAmort(c){
+  const biens=state.biens.filter(b=>b.prixAchat&&b.dateDebut);
+  if(biens.length===0){c.innerHTML='<div class="empty"><i class="ti ti-chart-line" aria-hidden="true"></i>Aucun bien amortissable</div>';return;}
+  const annees=['2021','2022','2023','2024','2025','2026','2027','2028'];
+  c.innerHTML=`<div class="al al-i">Plan par composantes : Structure 50 · Façade 40 · IGT 25 · Agencement 15 ans · Travaux 10 ans</div>
+  <div class="tw"><table><thead><tr><th>Bien</th>${annees.map(a=>`<th style="text-align:right">${a}</th>`).join('')}<th style="text-align:right">Total</th></tr></thead>
+    <tbody>${biens.map(b=>{const dots=annees.map(a=>calcAmort(b,a));const tot=dots.reduce((s,d)=>s+d,0);
+      return `<tr><td><strong>${b.nom.split(' — ')[0]}</strong></td>${dots.map(d=>`<td style="text-align:right;color:${d>0?'var(--color-text-primary)':'var(--color-text-tertiary)'}">${d>0?fmt(d):'—'}</td>`).join('')}<td style="text-align:right;font-weight:500">${fmt(tot)}</td></tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+
+function renderRep(c){
+  const totT=state.rep.reduce((s,r)=>s+(parseFloat(r.tantieme)||0),0)||10000;
+  c.innerHTML=`<div class="al al-i">Répartition charges communes par tantième.</div>
+  <div class="tw"><table><thead><tr><th>Bien</th><th style="text-align:right">Hab</th><th style="text-align:right">Var</th><th style="text-align:right">Jard</th><th style="text-align:right">Park</th><th style="text-align:right">Tantième</th><th style="text-align:right">%</th></tr></thead>
+    <tbody>${state.rep.map(r=>`<tr><td><strong>${r.nom}</strong></td><td style="text-align:right">${r.surface||0}</td><td style="text-align:right">${r.varangue||0}</td><td style="text-align:right">${r.jardin||0}</td><td style="text-align:right">${r.parking||0}</td><td style="text-align:right;font-weight:500">${fmtN(r.tantieme,0)}</td><td style="text-align:right">${((r.tantieme/totT)*100).toFixed(1)}</td></tr>`).join('')}<tr style="background:var(--color-background-secondary);font-weight:500"><td>Total</td><td colspan="4"></td><td style="text-align:right">${fmtN(totT,0)}</td><td style="text-align:right">100</td></tr></tbody></table></div>`;
+}
+
+function renderFiscal(c){
+  const annee=state.annee,prev=(parseInt(annee)-1).toString();
+  const tR=state.biens.reduce((s,b)=>s+getRec(b.id,annee),0);
+  const tC=state.biens.reduce((s,b)=>s+getChg(b.id,annee),0);
+  const tA=state.biens.reduce((s,b)=>s+calcAmort(b,annee),0);
+  const resApresA=tR-tC-tA;
+  const resF=Math.max(0,resApresA);
+  const ard=resApresA<0?Math.abs(resApresA):0;
+  const tRp=state.biens.reduce((s,b)=>s+getRec(b.id,prev),0);
+  const tCp=state.biens.reduce((s,b)=>s+getChg(b.id,prev),0);
+  const tAp=state.biens.reduce((s,b)=>s+calcAmort(b,prev),0);
+  const defPrev=Math.max(0,-(tRp-tCp-tAp));
+  c.innerHTML=`<div class="fg2"><div>
+    <div class="fs"><div class="fsh">Compte de résultat ${annee}</div>
+      <div class="fro"><span class="lab">Recettes</span><span class="tr-r">${fmt(tR)}</span></div>
+      <div class="fro"><span class="lab">Charges</span><span class="tr-c">${fmt(tC)}</span></div>
+      <div class="fro"><span class="lab">Amortissements</span><span class="tr-c">${fmt(tA)}</span></div>
+      <div class="fro tot hl"><span><strong>Résultat fiscal</strong></span><span class="${resF>0?'tr-r':''}"><strong>${fmt(resF)}</strong></span></div>
+      ${ard>0?`<div class="fro" style="background:#faeeda"><span class="lab">⚡ Déficit ${annee} reportable 10 ans</span><span>${fmt(ard)}</span></div>`:''}
+      ${defPrev>0?`<div class="fro" style="background:#e6f1fb"><span class="lab">↪ Déficit ${prev} disponible</span><span>${fmt(defPrev)}</span></div>`:''}
+    </div>
+    <div class="fs"><div class="fsh">Prélèvements sociaux</div>
+      <div class="fro"><span class="lab">Base</span><span>${fmt(resF)}</span></div>
+      <div class="fro tot"><span><strong>Total (${annee==='2026'?'18,6':'17,2'} %)</strong></span><span class="tr-c"><strong>${fmt(resF*(annee==='2026'?0.186:0.172))}</strong></span></div>
+    </div>
+  </div><div>
+    <div class="fs"><div class="fsh">Par bien</div>${state.biens.map(b=>{const r=getRec(b.id,annee),ch=getChg(b.id,annee),am=calcAmort(b,annee),re=r-ch-am;return `<div class="fro"><span class="lab">${b.nom.split(' — ')[0]}</span><span class="${re>=0?'tr-r':'tr-c'}">${fmt(re)}</span></div>`;}).join('')}
+      <div class="fro tot"><span><strong>Total</strong></span><span class="${resApresA>=0?'tr-r':'tr-c'}"><strong>${fmt(resApresA)}</strong></span></div></div>
+    <div class="fs"><div class="fsh">Abattement IR DOM 30 %</div>
+      <div class="fro"><span class="lab">IR brut TMI 30 %</span><span>${fmt(resF*0.3)}</span></div>
+      <div class="fro"><span class="lab">Abattement (max 2 450 €)</span><span class="tr-r">− ${fmt(Math.min(resF*0.3*0.3,2450))}</span></div>
+      <div class="fro tot hl"><span><strong>IR net estimé</strong></span><span><strong>${fmt(Math.max(0,resF*0.3-Math.min(resF*0.3*0.3,2450)))}</strong></span></div>
+    </div>
+  </div></div>`;
+}
+
+function renderForms(c){
+  const annee=state.annee;
+  const tR=state.biens.reduce((s,b)=>s+getRec(b.id,annee),0);
+  const tA=state.biens.reduce((s,b)=>s+calcAmort(b,annee),0);
+  const tI=state.tx.filter(t=>t.categorie==='interets'&&new Date(t.date).getFullYear().toString()===annee).reduce((s,t)=>s+t.montant,0);
+  const tT=state.tx.filter(t=>t.categorie==='taxe_fonciere'&&new Date(t.date).getFullYear().toString()===annee).reduce((s,t)=>s+t.montant,0);
+  const tCh=state.biens.reduce((s,b)=>s+getChg(b.id,annee),0)-tI-tT;
+  const resF=Math.max(0,tR-tCh-tT-tA-tI);
+  const recAir=state.biens.filter(b=>b.type==='airbnb').reduce((s,b)=>s+getRec(b.id,annee),0);
+  c.innerHTML=`<div class="al al-i">Liasse BIC LMNP ${annee} — EDI-TDFC.</div>
+    <div class="fs"><div class="fsh">2031-SD</div><div class="fro hl"><span class="lab">C7 — Bénéfice fiscal</span><span class="tr-r"><strong>${fmt(resF)}</strong></span></div></div>
+    <div class="fs"><div class="fsh">2033-B — Compte de résultat</div>
+      <div class="fro"><span class="lab">L. 218 — Loyers</span><span class="tr-r">${fmt(tR)}</span></div>
+      <div class="fro"><span class="lab">L. 242 — Charges</span><span class="tr-c">${fmt(tCh)}</span></div>
+      <div class="fro"><span class="lab">L. 244 — Taxe foncière</span><span class="tr-c">${fmt(tT)}</span></div>
+      <div class="fro"><span class="lab">L. 254 — Amortissements</span><span class="tr-c">${fmt(tA)}</span></div>
+      <div class="fro"><span class="lab">L. 294 — Intérêts</span><span class="tr-c">${fmt(tI)}</span></div>
+      <div class="fro tot hl"><span><strong>L. 370 — Résultat fiscal</strong></span><span class="tr-r"><strong>${fmt(resF)}</strong></span></div>
+    </div>
+    <div class="fs"><div class="fsh">2033-D — Cadre IV (LFSS 2024)</div>
+      ${recAir>23000?`<div class="fro" style="background:#fcebeb"><span class="lab" style="color:#a32d2d">⚠️ Airbnb ${fmt(recAir)} > 23 K€</span></div>`:''}
+      <div class="fro"><span class="lab">Revenu brut</span><span>${fmt(resF)}</span></div>
+      <div class="fro"><span class="lab">Abattement 26 %</span><span class="tr-c">− ${fmt(resF*0.26)}</span></div>
+      <div class="fro tot hl"><span><strong>Assiette SSI</strong></span><span><strong>${fmt(resF*0.74)}</strong></span></div>
+    </div>
+    <div class="fs"><div class="fsh">2042-C-PRO</div><div class="fro hl"><span class="lab">Case 5NK</span><span class="tr-r"><strong>${fmt(resF)}</strong></span></div></div>`;
+}
+
+function renderDur(c){
+  c.innerHTML=`<div class="al al-i">Durées d'amortissement BOFiP / durée d'usage.</div>
+  <div class="tw"><table><thead><tr><th>Équipement</th><th style="text-align:right">Durée</th><th>Source</th></tr></thead>
+    <tbody>${DUREES.map(d=>`<tr><td>${d[0]}</td><td style="text-align:right;font-weight:500;font-family:var(--font-mono)">${d[1]}</td><td style="font-size:10.5px;color:var(--color-text-tertiary)">${d[2]}</td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function renderChg(c){
+  const f=state.chgSearch?CHARGES_OK.filter(ch=>ch[1].toLowerCase().includes(state.chgSearch.toLowerCase())):CHARGES_OK;
+  c.innerHTML=`<div class="al al-i">82 charges déductibles BIC (BOFiP, MAJ 17/04/2026).</div>
+  <input class="search-inp" placeholder="Rechercher (internet, assurance...)" value="${state.chgSearch}" oninput="state.chgSearch=this.value;render()">
+  <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:8px">${f.length} résultat(s)</div>
+  <div class="tw"><table><thead><tr><th>N°</th><th>Dépense</th><th>Type</th></tr></thead>
+    <tbody>${f.map(ch=>`<tr><td style="font-family:var(--font-mono);color:var(--color-text-tertiary)">${ch[0]}</td><td>${ch[1]}</td><td><span class="tag">${ch[2]}</span></td></tr>`).join('')}</tbody></table></div>`;
+}
+
+function renderPV(c){
+  const p=state.pvData;
+  const amortPart=p.prixAcq*(1-p.terrain/100);
+  const amortCumul=amortPart*(Math.pow(1+p.augmAmort/100,p.duree)-1);
+  const fraisAcqM=p.prixAcq*p.fraisAcq/100;
+  const travauxM=p.duree>5?p.prixAcq*p.travauxPct/100:0;
+  const pvBrute=p.prixCes-p.prixAcq-fraisAcqM-travauxM+amortCumul;
+  const abatIR=Math.min(1,0.06*Math.max(p.duree-5,0));
+  const abatPS=p.duree<22?Math.min(1,0.0165*Math.max(p.duree-5,0)):Math.min(1,0.28+0.09*Math.max(p.duree-22,0));
+  const irLMNP=pvBrute*(1-abatIR)*0.19;
+  const psLMNP=pvBrute*(1-abatPS)*0.172;
+  const totLMNP=irLMNP+psLMNP;
+  const expLMP=p.duree>5&&p.loyers<=90000;
+  const ssiLMP=amortCumul*0.41/1.41;
+  const irLMPCT=(amortCumul-ssiLMP)*p.tmi;
+  const totLMP=expLMP?ssiLMP+irLMPCT:ssiLMP+irLMPCT+(p.prixCes-p.prixAcq-fraisAcqM)*0.3;
+  c.innerHTML=`<div class="al al-w">⚠️ LF 2025 art. 84 — amortissements LMNP réintégrés dans la PV depuis 15/02/2025.</div>
+  <div class="fg2"><div class="fs"><div class="fsh">Paramètres</div>
+    <div class="fro"><span class="lab">Prix achat</span><input type="number" class="sel" style="width:120px" value="${p.prixAcq}" onchange="state.pvData.prixAcq=parseFloat(this.value)||0;render()"></div>
+    <div class="fro"><span class="lab">Prix cession</span><input type="number" class="sel" style="width:120px" value="${p.prixCes}" onchange="state.pvData.prixCes=parseFloat(this.value)||0;render()"></div>
+    <div class="fro"><span class="lab">Loyers/an</span><input type="number" class="sel" style="width:120px" value="${p.loyers}" onchange="state.pvData.loyers=parseFloat(this.value)||0;render()"></div>
+    <div class="fro"><span class="lab">Durée (ans)</span><input type="number" class="sel" style="width:120px" value="${p.duree}" onchange="state.pvData.duree=parseFloat(this.value)||0;render()"></div>
+    <div class="fro"><span class="lab">TMI %</span><input type="number" step="0.01" class="sel" style="width:120px" value="${p.tmi*100}" onchange="state.pvData.tmi=(parseFloat(this.value)||0)/100;render()"></div>
+  </div><div class="fs"><div class="fsh">Calculs</div>
+    <div class="fro"><span class="lab">Amort. cumulés</span><span>${fmt(amortCumul)}</span></div>
+    <div class="fro"><span class="lab">Frais acquisition</span><span>${fmt(fraisAcqM)}</span></div>
+    <div class="fro"><span class="lab">Travaux forfait</span><span>${fmt(travauxM)}</span></div>
+    <div class="fro"><span class="lab">PV brute LMNP</span><span>${fmt(pvBrute)}</span></div>
+  </div></div>
+  <div class="fg2"><div class="fs" style="border-color:#3b6d11"><div class="fsh" style="background:#eaf3de;color:#3b6d11">LMNP</div>
+    <div class="fro"><span class="lab">Abat. IR</span><span>${(abatIR*100).toFixed(0)} %</span></div>
+    <div class="fro"><span class="lab">IR (19 %)</span><span class="tr-c">${fmt(irLMNP)}</span></div>
+    <div class="fro"><span class="lab">PS (17,2 %)</span><span class="tr-c">${fmt(psLMNP)}</span></div>
+    <div class="fro tot hl"><span><strong>Total LMNP</strong></span><span class="tr-c"><strong>${fmt(totLMNP)}</strong></span></div>
+  </div><div class="fs" style="border-color:#854f0b"><div class="fsh" style="background:#faeeda;color:#854f0b">LMP</div>
+    <div class="fro"><span class="lab">Exonération 151 septies</span><span class="${expLMP?'tr-r':'tr-c'}">${expLMP?'✓':'✗'}</span></div>
+    <div class="fro"><span class="lab">SSI PV CT</span><span class="tr-c">${fmt(ssiLMP)}</span></div>
+    <div class="fro"><span class="lab">IR PV CT</span><span class="tr-c">${fmt(irLMPCT)}</span></div>
+    <div class="fro tot hl"><span><strong>Total LMP</strong></span><span class="tr-c"><strong>${fmt(totLMP)}</strong></span></div>
+  </div></div>
+  <div class="al ${totLMNP<totLMP?'al-s':'al-w'}"><strong>${totLMNP<totLMP?'✅ LMNP plus avantageux':'⚠️ LMP plus avantageux'}</strong> — Écart : ${fmt(Math.abs(totLMNP-totLMP))}</div>`;
+}
+
+function renderTerr(c){
+  const p=state.profil;
+  c.innerHTML=`<div class="te"><i class="ti ti-map-pin" aria-hidden="true"></i><strong>La Réunion (DOM)</strong></div>
+    <div class="fs"><div class="fsh">Identification</div>
+      <div class="fro"><span class="lab">SIRET</span><input class="sel" style="width:160px" placeholder="000 000 000 00000" value="${p.siret||''}" onchange="p.siret=this.value;save('lmnp_profil',p);"></div>
+      <div class="fro"><span class="lab">Régime TVA</span><select class="sel" onchange="p.regimeTVA=this.value;save('lmnp_profil',p);"><option value="franchise" ${p.regimeTVA==='franchise'?'selected':''}>Franchise</option><option value="reel" ${p.regimeTVA==='reel'?'selected':''}>Réel</option></select></div>
+      <div class="fro"><span class="lab">Foyer</span><span>Mariage / indivision · 68 K€ rev pro</span></div>
+    </div>
+    <div class="fs"><div class="fsh">Avantages DOM</div>
+      <div class="fro" style="background:#eaf3de"><span class="lab">Abattement IR 30 % (max 2 450 €)</span><span style="color:#3b6d11">✓</span></div>
+      <div class="fro" style="background:#eaf3de"><span class="lab">TVA 8,5 % (vs 20 %)</span><span style="color:#3b6d11">✓</span></div>
+      <div class="fro" style="background:#eaf3de"><span class="lab">Plafond niches 18 000 €</span><span style="color:#3b6d11">✓</span></div>
+    </div>`;
+}
+
+function renderSrc(c){
+  const cats=[{id:'all',l:'Toutes'},{id:'officiel',l:'Officielles'},{id:'bofip',l:'BOFiP'},{id:'loi',l:'Lois'},{id:'social',l:'URSSAF'},{id:'dom',l:'DOM'}];
+  const filt=state.srcFilter==='all'?state.sources:state.sources.filter(s=>s.cat===state.srcFilter);
+  c.innerHTML=`<div class="fb">${cats.map(ca=>`<div class="chip ${state.srcFilter===ca.id?'active':''}" onclick="state.srcFilter='${ca.id}';render()">${ca.l}</div>`).join('')}</div>
+    <div class="tw">${filt.map(s=>{
+      const icons={officiel:'building-bank',bofip:'file-text',loi:'scale',social:'users',dom:'map-pin',jurisprudence:'gavel'};
+      const colors={officiel:'#e6f1fb;color:#185fa5',bofip:'#eaf3de;color:#3b6d11',loi:'#faeeda;color:#854f0b',social:'#faece7;color:#993c1d',dom:'#f1eefd;color:#534ab7',jurisprudence:'#fbeaf0;color:#993556'};
+      return `<div class="si"><div class="si-ic" style="background:${colors[s.cat]}"><i class="ti ti-${icons[s.cat]||'bookmark'}" aria-hidden="true"></i></div>
+        <div class="si-b"><div class="si-n">${s.name}</div><div class="si-u" onclick="openLink('${s.url}')">${s.url}</div>
+        ${s.ref?`<div style="font-size:10px;color:var(--color-text-tertiary);font-family:var(--font-mono);margin-top:2px">${s.ref}</div>`:''}
+        <div class="si-d">${s.desc}</div></div></div>`;
+    }).join('')}</div>`;
+}
+
+function renderNotifs(c){
+  c.innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:10px"><div style="font-size:12px;color:var(--color-text-secondary)">${state.notifs.filter(n=>!n.dismissed).length} non lue(s)</div><button class="btn btn-sm" onclick="dismissAll()">Tout lu</button></div>
+    ${state.notifs.map(n=>`<div class="rc" style="${n.dismissed?'opacity:0.5':''}">
+      <div style="display:flex;gap:8px"><div class="nd nd-${n.type}" style="margin-top:5px"></div><div style="flex:1"><div style="font-weight:500;font-size:12.5px">${n.title}</div><div style="font-size:11.5px;color:var(--color-text-secondary);margin-top:3px;line-height:1.5">${n.desc}</div></div>${!n.dismissed?`<button class="btn btn-sm" onclick="dismissNotif('${n.id}')"><i class="ti ti-check" aria-hidden="true"></i></button>`:''}</div></div>`).join('')}`;
+}
+
+function renderChk(c){
+  const errs=state.checks.filter(x=>x.sev==='erreur');
+  const av=state.checks.filter(x=>x.sev==='avert');
+  const im={erreur:'ti-alert-circle',avert:'ti-alert-triangle',info:'ti-info-circle',ok:'ti-circle-check'};
+  const cm={erreur:'#c0392b',avert:'#ba7517',info:'#185fa5',ok:'#1a7a4a'};
+  c.innerHTML=`<div class="cmp-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="cmp-c"><div class="cmp-l">Erreurs</div><div class="cmp-v" style="color:#c0392b">${errs.length}</div></div>
+    <div class="cmp-c"><div class="cmp-l">Avertissements</div><div class="cmp-v" style="color:#854f0b">${av.length}</div></div>
+    <div class="cmp-c"><div class="cmp-l">Dernier ctrl</div><div class="cmp-v" style="font-size:13px">${state.lastCheck||'—'}</div></div>
+  </div>
+  <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button class="btn btn-p btn-sm" onclick="runChecks()"><i class="ti ti-refresh" aria-hidden="true"></i>Relancer</button></div>
+  <div class="tw">${state.checks.map(chk=>`<div class="ck ck-${chk.sev}"><i class="ti ${im[chk.sev]}" style="color:${cm[chk.sev]}" aria-hidden="true"></i><div style="flex:1"><div class="ck-t">${chk.title}</div><div class="ck-d">${chk.desc}</div>${chk.ref?`<div class="ck-r">${chk.ref}</div>`:''}</div></div>`).join('')}</div>`;
+}
+
+function showBienModal(id){
+  const b=id?state.biens.find(x=>x.id===id):null;
+  document.getElementById('mc').innerHTML=`<div class="mb" onclick="if(event.target===this)closeM()"><div class="mo" onclick="event.stopPropagation()">
+    <div class="mh"><span>${b?'Modifier':'Nouveau'} bien</span><button class="btn btn-sm" onclick="closeM()"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+    <div class="mbo">
+      <div class="fg"><label>Nom</label><input id="bn" value="${b?b.nom:''}"></div>
+      <div class="fg"><label>Adresse</label><input id="ba" value="${b?b.adresse||'':''}"></div>
+      <div class="fg"><label>Type</label><select id="bt"><option value="meuble" ${b?.type==='meuble'?'selected':''}>Meublé</option><option value="airbnb" ${b?.type==='airbnb'?'selected':''}>Airbnb</option><option value="travaux" ${b?.type==='travaux'?'selected':''}>En travaux</option></select></div>
+      <div class="fr"><div class="fg"><label>Prix €</label><input id="bp" type="number" step="0.01" inputmode="decimal" value="${b?.prixAchat||''}"></div><div class="fg"><label>Notaire €</label><input id="bf" type="number" step="0.01" inputmode="decimal" value="${b?.fraisNotaire||''}"></div></div>
+      <div class="fg"><label>Date début</label><input id="bd" type="date" value="${b?.dateDebut||''}"></div>
+    </div>
+    <div class="fa"><button class="btn" onclick="closeM()">Annuler</button><button class="btn btn-p" onclick="saveBien('${id||''}')">Enregistrer</button></div>
+  </div></div>`;
+}
+
+async function saveBien(id){
+  const b={id:id||'b'+Date.now(),nom:document.getElementById('bn').value,adresse:document.getElementById('ba').value,type:document.getElementById('bt').value,prixAchat:parseFloat(document.getElementById('bp').value)||0,fraisNotaire:parseFloat(document.getElementById('bf').value)||0,dateDebut:document.getElementById('bd').value,travaux:id?state.biens.find(x=>x.id===id)?.travaux||[]:[]};
+  if(!b.nom)return;
+  state.biens=id?state.biens.map(x=>x.id===id?b:x):[...state.biens,b];
+  await save('lmnp_biens',state.biens);closeM();runChecks(true);render();
+}
+
+async function delBien(id){
+  if(!confirm('Supprimer ?'))return;
+  state.biens=state.biens.filter(x=>x.id!==id);
+  state.tx=state.tx.filter(t=>t.bienId!==id);
+  await Promise.all([save('lmnp_biens',state.biens),save('lmnp_tx',state.tx)]);
+  runChecks(true);render();
+}
+
+function showTxModal(pre){
+  document.getElementById('mc').innerHTML=`<div class="mb" onclick="if(event.target===this)closeM()"><div class="mo" onclick="event.stopPropagation()">
+    <div class="mh"><span>Transaction</span><button class="btn btn-sm" onclick="closeM()"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+    <div class="mbo">
+      <div class="fr"><div class="fg"><label>Date</label><input id="td" type="date" value="${pre?.date||new Date().toISOString().slice(0,10)}"></div><div class="fg"><label>Bien</label><select id="tb">${state.biens.map(b=>`<option value="${b.id}">${b.nom}</option>`).join('')}</select></div></div>
+      <div class="fr"><div class="fg"><label>Type</label><select id="tt"><option value="recette">Recette</option><option value="charge" ${pre?.type==='charge'?'selected':''}>Charge</option></select></div><div class="fg"><label>Catégorie</label><select id="tc">${CATS.map(ca=>`<option value="${ca.v}" ${pre?.categorie===ca.v?'selected':''}>${ca.l}</option>`).join('')}</select></div></div>
+      <div class="fg"><label>Montant €</label><input id="tm" type="number" step="0.01" inputmode="decimal" value="${pre?.montant||''}"></div>
+      <div class="fg"><label>Fournisseur</label><input id="tf" value="${pre?.fournisseur||''}"></div>
+      <div class="fg"><label>Description</label><input id="tds" value="${pre?.description||''}"></div>
+    </div>
+    <div class="fa"><button class="btn" onclick="closeM()">Annuler</button><button class="btn btn-p" onclick="saveTx()">Enregistrer</button></div>
+  </div></div>`;
+}
+
+async function saveTx(){
+  const t={id:'t'+Date.now(),date:document.getElementById('td').value,bienId:document.getElementById('tb').value,type:document.getElementById('tt').value,categorie:document.getElementById('tc').value,montant:parseFloat(document.getElementById('tm').value)||0,fournisseur:document.getElementById('tf').value,description:document.getElementById('tds').value};
+  if(!t.date||!t.montant)return;
+  state.tx=[...state.tx,t];await save('lmnp_tx',state.tx);closeM();runChecks(true);render();
+}
+
+async function delTx(id){state.tx=state.tx.filter(t=>t.id!==id);await save('lmnp_tx',state.tx);runChecks(true);render();}
+
+function showRepModal(){
+  document.getElementById('mc').innerHTML=`<div class="mb" onclick="if(event.target===this)closeM()"><div class="mo" onclick="event.stopPropagation()">
+    <div class="mh"><span>Répartition</span><button class="btn btn-sm" onclick="closeM()"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+    <div class="mbo"><table style="width:100%;font-size:11px"><thead><tr><th>Bien</th><th>Hab</th><th>Var</th><th>Jard</th><th>Park</th><th>Tant</th></tr></thead><tbody>
+      ${state.rep.map(r=>`<tr><td>${r.nom}</td><td><input type="number" class="rs" value="${r.surface||0}" style="width:45px"></td><td><input type="number" class="rv" value="${r.varangue||0}" style="width:45px"></td><td><input type="number" class="rj" value="${r.jardin||0}" style="width:45px"></td><td><input type="number" class="rp" value="${r.parking||0}" style="width:40px"></td><td><input type="number" class="rt" value="${r.tantieme||0}" style="width:60px"></td></tr>`).join('')}
+    </tbody></table></div>
+    <div class="fa"><button class="btn" onclick="closeM()">Annuler</button><button class="btn btn-p" onclick="saveRep()">Enregistrer</button></div>
+  </div></div>`;
+}
+
+async function saveRep(){
+  const g=cls=>[...document.querySelectorAll('.'+cls)].map(e=>parseFloat(e.value)||0);
+  const ss=g('rs'),vs=g('rv'),js=g('rj'),ps=g('rp'),ts=g('rt');
+  state.rep=state.rep.map((r,i)=>({...r,surface:ss[i],varangue:vs[i],jardin:js[i],parking:ps[i],tantieme:ts[i]}));
+  await save('lmnp_rep',state.rep);closeM();runChecks(true);render();
+}
+
+function showAddSrc(){
+  document.getElementById('mc').innerHTML=`<div class="mb" onclick="if(event.target===this)closeM()"><div class="mo" onclick="event.stopPropagation()">
+    <div class="mh"><span>Source</span><button class="btn btn-sm" onclick="closeM()"><i class="ti ti-x" aria-hidden="true"></i></button></div>
+    <div class="mbo">
+      <div class="fg"><label>Nom</label><input id="sn"></div>
+      <div class="fg"><label>URL</label><input id="su"></div>
+      <div class="fg"><label>Référence</label><input id="srr"></div>
+      <div class="fg"><label>Description</label><textarea id="sd" rows="3"></textarea></div>
+    </div>
+    <div class="fa"><button class="btn" onclick="closeM()">Annuler</button><button class="btn btn-p" onclick="addSrc()">Ajouter</button></div>
+  </div></div>`;
+}
+
+async function addSrc(){
+  const s={id:'s'+Date.now(),cat:'custom',name:document.getElementById('sn').value,url:document.getElementById('su').value,ref:document.getElementById('srr').value,desc:document.getElementById('sd').value,verified:new Date().toISOString().slice(0,10)};
+  if(!s.name||!s.url)return;
+  state.sources=[...state.sources,s];await save('lmnp_sources',state.sources);closeM();render();
+}
+
+async function dismissNotif(id){state.notifs=state.notifs.map(n=>n.id===id?{...n,dismissed:true}:n);await save('lmnp_notifs',state.notifs);render();}
+async function dismissAll(){state.notifs=state.notifs.map(n=>({...n,dismissed:true}));await save('lmnp_notifs',state.notifs);render();}
+function closeM(){document.getElementById('mc').innerHTML='';}
+function openLink(u){if(u&&u.startsWith('http'))window.open(u,'_blank');}
+
+load();
+</script>
+
+<script>
+// ─── Polyfill localStorage pour remplacer window.storage de Claude ───
+const __storage = {
+  get: function(key) {
+    return Promise.resolve().then(() => {
+      const value = localStorage.getItem(key);
+      return value !== null ? { key, value } : null;
+    });
+  },
+  set: function(key, value) {
+    return Promise.resolve().then(() => {
+      const str = typeof value === 'string' ? value : JSON.stringify(value);
+      localStorage.setItem(key, str);
+      return { key, value: str };
+    });
+  },
+  delete: function(key) {
+    return Promise.resolve().then(() => {
+      localStorage.removeItem(key);
+      return { key, deleted: true };
+    });
+  },
+  list: function(prefix) {
+    return Promise.resolve().then(() => {
+      const keys = Object.keys(localStorage).filter(k => !prefix || k.startsWith(prefix));
+      return { keys };
+    });
+  }
+};
+
+// ─── Enregistrement Service Worker ───
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('SW enregistré:', reg.scope))
+      .catch(err => console.log('SW erreur:', err));
+  });
+}
+
+// ─── Bannière installation iOS ───
+window.addEventListener('load', () => {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+    || window.navigator.standalone === true;
+  const dismissed = localStorage.getItem('pwa-dismissed');
+
+  if (isIOS && !isStandalone && !dismissed) {
+    setTimeout(() => {
+      document.getElementById('pwa-banner').classList.add('show');
+    }, 2000);
+  }
+});
+</script>
+
+</body>
+</html>
