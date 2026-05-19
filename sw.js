@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lmnp-v6';
+const CACHE_NAME = 'lmnp-v7';
 
 self.addEventListener('install', event => {
   self.skipWaiting();
