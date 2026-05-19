@@ -11,12 +11,11 @@
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
   <style>
     :root {
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      --font-mono: 'SF Mono', 'Fira Code', monospace;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'SF Mono', monospace;
       --color-background-primary: #ffffff;
       --color-background-secondary: #f5f5f7;
       --color-background-tertiary: #ebebed;
@@ -35,47 +34,66 @@
         --color-text-primary: #f5f5f7;
         --color-text-secondary: #aeaeb2;
         --color-text-tertiary: #636366;
-        --color-border-primary: #48484a;
         --color-border-secondary: #3a3a3c;
         --color-border-tertiary: #2c2c2e;
       }
     }
-    html, body {
-      margin: 0; padding: 0; height: 100%;
-      background: var(--color-background-secondary);
-      font-family: var(--font-sans);
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
-    }
-    /* Banner iOS install */
-    #pwa-banner {
-      display: none; position: fixed;
-      bottom: 0; left: 0; right: 0;
-      background: #1a7a4a; color: white;
-      padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-      font-size: 13px; z-index: 9999;
-      align-items: center; gap: 10px;
-    }
-    #pwa-banner.show { display: flex; }
-    #pwa-banner .close-btn {
-      background: transparent; color: white;
-      border: none; margin-left: auto;
-      font-size: 20px; cursor: pointer; padding: 0 4px;
-    }
-    /* Override Claude artifact constraints */
+    html, body { margin:0; padding:0; height:100%; background:var(--color-background-secondary); }
     .app {
       max-height: none !important;
       height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
       border-radius: 0 !important;
       border: none !important;
     }
+    body {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
   </style>
 </head>
 <body>
-<div id="pwa-banner">
-  <span>📱 Safari → <strong>⎙ Partager</strong> → <strong>"Sur l'écran d'accueil"</strong></span>
-  <button class="close-btn" onclick="this.parentElement.classList.remove('show');localStorage.setItem('pwa-ok','1')">✕</button>
-</div>
+
+<script>
+// ════════════════════════════════════════════
+// POLYFILL — doit être EN PREMIER avant tout
+// ════════════════════════════════════════════
+const __storage = {
+  get(key) {
+    return Promise.resolve().then(() => {
+      try {
+        const value = localStorage.getItem(key);
+        return value !== null ? { key, value } : null;
+      } catch(e) { return null; }
+    });
+  },
+  set(key, value) {
+    return Promise.resolve().then(() => {
+      try {
+        const str = typeof value === 'string' ? value : JSON.stringify(value);
+        localStorage.setItem(key, str);
+        return { key, value: str };
+      } catch(e) { return null; }
+    });
+  },
+  delete(key) {
+    return Promise.resolve().then(() => {
+      try { localStorage.removeItem(key); } catch(e) {}
+      return { key, deleted: true };
+    });
+  },
+  list(prefix) {
+    return Promise.resolve().then(() => {
+      try {
+        const keys = Object.keys(localStorage).filter(k => !prefix || k.startsWith(prefix));
+        return { keys };
+      } catch(e) { return { keys: [] }; }
+    });
+  }
+};
+
+// Clé API Anthropic
+const ANTHROPIC_API_KEY = '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';
+</script>
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -248,7 +266,7 @@ tr:hover td{background:var(--color-background-secondary)}
       <h1 id="title"><i class="ti ti-dashboard" aria-hidden="true"></i>Dashboard</h1>
       <div class="tbr">
         <select class="sel" id="ys" onchange="state.annee=this.value;save('lmnp_annee',state.annee);render()"></select>
-        <button class="btn" onclick="addYear()" title="Ajouter une année" style="padding:6px 9px;min-height:32px;font-size:16px">+</button>
+        <button class="btn" onclick="addYear()" style="padding:6px 10px;min-height:32px;font-weight:600;font-size:15px">+</button>
         <button class="btn btn-p" id="action-btn" onclick="mainAction()"><i class="ti ti-plus" aria-hidden="true"></i></button>
       </div>
     </div>
@@ -256,42 +274,6 @@ tr:hover td{background:var(--color-background-secondary)}
   </div>
   <div id="mc"></div>
 </div>
-
-<script>
-// ══════════════════════════════════════════════
-// POLYFILL localStorage (doit être défini EN PREMIER)
-// ══════════════════════════════════════════════
-const __storage = {
-  get(key) {
-    return Promise.resolve().then(() => {
-      const value = localStorage.getItem(key);
-      return value !== null ? { key, value } : null;
-    });
-  },
-  set(key, value) {
-    return Promise.resolve().then(() => {
-      const str = typeof value === 'string' ? value : JSON.stringify(value);
-      localStorage.setItem(key, str);
-      return { key, value: str };
-    });
-  },
-  delete(key) {
-    return Promise.resolve().then(() => {
-      localStorage.removeItem(key);
-      return { key, deleted: true };
-    });
-  },
-  list(prefix) {
-    return Promise.resolve().then(() => {
-      const keys = Object.keys(localStorage).filter(k => !prefix || k.startsWith(prefix));
-      return { keys };
-    });
-  }
-};
-
-// CLÉ API Anthropic
-const ANTHROPIC_API_KEY = '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';
-</script>
 
 <script>
 // Transactions 2021-2024 (451 entrées extraites du Journal du fichier 2023-2024_V2)
@@ -1036,7 +1018,7 @@ function renderDash(c){
 }
 
 function renderIY(c){
-  const annees=state.annees||['2021','2022','2023','2024'];
+  const annees=(state.annees||['2021','2022','2023','2024','2025']).slice().sort();
   const rows=state.biens.map(b=>({nom:b.nom.split(' — ')[0],type:b.type,data:annees.map(y=>({rec:getRec(b.id,y),chg:getChg(b.id,y),am:calcAmort(b,y)}))})).filter(r=>r.data.some(d=>d.rec>0||d.chg>0));
   const tots=annees.map(y=>({rec:state.biens.reduce((s,b)=>s+getRec(b.id,y),0),chg:state.biens.reduce((s,b)=>s+getChg(b.id,y),0),am:state.biens.reduce((s,b)=>s+calcAmort(b,y),0)}));
   c.innerHTML=`<div class="al al-i">Comparatif 2021-2024 sur l'ensemble du patrimoine LMNP.</div>
@@ -1086,13 +1068,11 @@ function renderScan(c){
     <div id="sr"></div>`;
 }
 
-async function
-// handleScan défini ci-dessous
 
 function renderAmort(c){
   const biens=state.biens.filter(b=>b.prixAchat&&b.dateDebut);
   if(biens.length===0){c.innerHTML='<div class="empty"><i class="ti ti-chart-line" aria-hidden="true"></i>Aucun bien amortissable</div>';return;}
-  const baseAnnees=state.annees||['2021','2022','2023','2024'];const yr=parseInt(baseAnnees[baseAnnees.length-1]);const annees=[...new Set([...baseAnnees,...[yr+1,yr+2,yr+3,yr+4].map(String)])];
+  const base=(state.annees||['2021','2022','2023','2024','2025']).slice().sort();const last=parseInt(base[base.length-1]);const annees=[...new Set([...base,...[last+1,last+2,last+3].map(String)])];
   c.innerHTML=`<div class="al al-i">Plan par composantes : Structure 50 · Façade 40 · IGT 25 · Agencement 15 ans · Travaux 10 ans</div>
   <div class="tw"><table><thead><tr><th>Bien</th>${annees.map(a=>`<th style="text-align:right">${a}</th>`).join('')}<th style="text-align:right">Total</th></tr></thead>
     <tbody>${biens.map(b=>{const dots=annees.map(a=>calcAmort(b,a));const tot=dots.reduce((s,d)=>s+d,0);
@@ -1371,32 +1351,30 @@ async function dismissAll(){state.notifs=state.notifs.map(n=>({...n,dismissed:tr
 function closeM(){document.getElementById('mc').innerHTML='';}
 function openLink(u){if(u&&u.startsWith('http'))window.open(u,'_blank');}
 
-load();
 </script>
 
-
-
 <script>
-// ══════════════════════════════════════════════
-// SÉLECTEUR D'ANNÉE DYNAMIQUE
-// ══════════════════════════════════════════════
+// ════════════════════════════════════════════
+// FONCTIONS SUPPLÉMENTAIRES
+// ════════════════════════════════════════════
+
 function updateYearSelector() {
   const sel = document.getElementById('ys');
   if (!sel) return;
-  const annees = state.annees || ['2021','2022','2023','2024','2025'];
+  const annees = (state.annees || ['2021','2022','2023','2024','2025']).slice().sort();
   sel.innerHTML = annees.map(y =>
-    `<option value="${y}" ${y === state.annee ? 'selected' : ''}>${y}</option>`
+    '<option value="' + y + '"' + (y === state.annee ? ' selected' : '') + '>' + y + '</option>'
   ).join('');
 }
 
 function addYear() {
-  const annees = state.annees || ['2021','2022','2023','2024','2025'];
+  const annees = (state.annees || ['2021','2022','2023','2024','2025']).slice().sort();
   const last = parseInt(annees[annees.length - 1]);
-  const input = prompt(`Ajouter une année (suggestion: ${last + 1})`);
+  const input = prompt('Ajouter une annee (suggestion : ' + (last + 1) + ')');
   if (!input) return;
   const yr = input.trim();
-  if (!/^\d{4}$/.test(yr)) { alert('Format invalide. Ex: 2026'); return; }
-  if (annees.includes(yr)) { alert('Cette année existe déjà.'); return; }
+  if (!/^\d{4}$/.test(yr)) { alert('Format invalide. Exemple : 2026'); return; }
+  if (annees.includes(yr)) { alert('Cette annee existe deja.'); return; }
   const newAnnees = [...annees, yr].sort();
   state.annees = newAnnees;
   state.annee = yr;
@@ -1405,15 +1383,11 @@ function addYear() {
   render();
 }
 
-// ══════════════════════════════════════════════
-// PATCH handleScan — utilise la clé API locale
-// ══════════════════════════════════════════════
 async function handleScan(inp) {
-  const f = inp.files[0]; if (!f) return;
+  const f = inp.files[0];
+  if (!f) return;
   const r = document.getElementById('sr');
-
-  r.innerHTML = '<div class="rc" style="text-align:center;padding:18px"><i class="ti ti-loader-2" style="font-size:22px;display:block;margin-bottom:6px"></i><div style="font-size:12px">Analyse IA en cours...</div></div>';
-
+  r.innerHTML = '<div class="rc" style="text-align:center;padding:24px"><i class="ti ti-loader-2" style="font-size:28px;display:block;margin-bottom:8px"></i><div style="font-size:13px">Analyse IA en cours...</div></div>';
   try {
     const b64 = await new Promise((res, rej) => {
       const fr = new FileReader();
@@ -1421,72 +1395,61 @@ async function handleScan(inp) {
       fr.onerror = rej;
       fr.readAsDataURL(f);
     });
-
-    const resp = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: 'claude-sonnet-4-20250514',
         max_tokens: 600,
         messages: [{
-          role: "user",
+          role: 'user',
           content: [
-            { type: "image", source: { type: "base64", media_type: f.type || 'image/jpeg', data: b64 } },
-            { type: "text", text: 'Analyse cette facture (LMNP La Réunion, TVA 8.5%). Retourne UNIQUEMENT JSON valide sans markdown: {"date":"YYYY-MM-DD","fournisseur":"...","description":"libellé court","montant_ht":0,"tva":0,"montant_ttc":0,"categorie":"assurance|taxe_fonciere|charges_copro|entretien|interets|frais_gestion|electricite|eau|frais_airbnb|travaux|mobilier|autre","type":"charge|recette"}' }
+            { type: 'image', source: { type: 'base64', media_type: f.type || 'image/jpeg', data: b64 } },
+            { type: 'text', text: 'Analyse cette facture LMNP La Reunion TVA 8.5%. Reponds UNIQUEMENT avec du JSON valide sans markdown: {"date":"YYYY-MM-DD","fournisseur":"...","description":"...","montant_ht":0,"tva":0,"montant_ttc":0,"categorie":"entretien","type":"charge"}' }
           ]
         }]
       })
     });
-
     const data = await resp.json();
-    const txt = data.content?.find(x => x.type === 'text')?.text || '';
+    if (data.error) throw new Error(data.error.message);
+    const txt = (data.content || []).find(x => x.type === 'text')?.text || '';
+    if (!txt) throw new Error('Reponse vide');
     const res = JSON.parse(txt.replace(/```json|```/g, '').trim());
     const cat = CATS.find(x => x.v === res.categorie) || CATS[CATS.length - 1];
-
-    r.innerHTML = `<div class="al al-s">✓ Facture analysée</div>
-    <div class="rc">
-      <div style="font-weight:500;margin-bottom:6px"><i class="ti ti-file-invoice"></i> Résultat IA</div>
-      <div class="ff"><span>Date</span><span>${res.date || '—'}</span></div>
-      <div class="ff"><span>Fournisseur</span><span>${res.fournisseur || '—'}</span></div>
-      <div class="ff"><span>Description</span><span>${res.description || '—'}</span></div>
-      <div class="ff"><span>HT</span><span>${fmt(res.montant_ht)}</span></div>
-      <div class="ff"><span>TVA</span><span>${fmt(res.tva)}</span></div>
-      <div class="ff"><span>TTC</span><span style="font-size:14px">${fmt(res.montant_ttc)}</span></div>
-      <div class="ff"><span>Catégorie</span><span><span class="tag">${cat.l}</span></span></div>
-    </div>
-    <div style="display:flex;gap:6px;justify-content:flex-end">
-      <button class="btn" onclick="document.getElementById('sr').innerHTML='';document.getElementById('fi-cam').value='';document.getElementById('fi-up').value=''">Recommencer</button>
-      <button class="btn btn-p" onclick='showTxModal(${JSON.stringify({date:res.date,type:res.type||"charge",categorie:res.categorie,montant:res.montant_ttc,fournisseur:res.fournisseur,description:res.description})})'><i class="ti ti-check"></i>Créer écriture</button>
-    </div>`;
+    const preData = JSON.stringify({date:res.date,type:res.type||'charge',categorie:res.categorie,montant:res.montant_ttc,fournisseur:res.fournisseur,description:res.description});
+    r.innerHTML = '<div class="al al-s">Facture analysee</div>'
+      + '<div class="rc">'
+      + '<div class="ff"><span>Date</span><span>' + (res.date||'--') + '</span></div>'
+      + '<div class="ff"><span>Fournisseur</span><span>' + (res.fournisseur||'--') + '</span></div>'
+      + '<div class="ff"><span>Description</span><span>' + (res.description||'--') + '</span></div>'
+      + '<div class="ff"><span>HT</span><span>' + fmt(res.montant_ht) + '</span></div>'
+      + '<div class="ff"><span>TVA</span><span>' + fmt(res.tva) + '</span></div>'
+      + '<div class="ff"><span>TTC</span><span style="font-size:15px;font-weight:500">' + fmt(res.montant_ttc) + '</span></div>'
+      + '<div class="ff"><span>Categorie</span><span><span class="tag">' + cat.l + '</span></span></div>'
+      + '</div>'
+      + '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">'
+      + '<button class="btn" onclick="document.getElementById(\'sr\').innerHTML=\'\';document.getElementById(\'fi-cam\').value=\'\';document.getElementById(\'fi-up\').value=\'\'">Recommencer</button>'
+      + '<button class="btn btn-p" onclick="showTxModal(' + preData + ')">Creer ecriture</button>'
+      + '</div>';
   } catch(e) {
-    r.innerHTML = `<div class="al al-d">Erreur : ${e.message}</div>`;
+    r.innerHTML = '<div class="al al-d">Erreur : ' + e.message + '</div>';
   }
 }
 
-// ══════════════════════════════════════════════
-// SERVICE WORKER
-// ══════════════════════════════════════════════
+// Appel principal
+load();
+
+// Service Worker
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('./sw.js').catch(function(){});
   });
 }
-
-// ══════════════════════════════════════════════
-// BANNIÈRE INSTALLATION iOS
-// ══════════════════════════════════════════════
-window.addEventListener('load', () => {
-  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-  if (isIOS && !isStandalone && !localStorage.getItem('pwa-ok')) {
-    setTimeout(() => document.getElementById('pwa-banner').classList.add('show'), 2500);
-  }
-});
 </script>
 </body>
 </html>
