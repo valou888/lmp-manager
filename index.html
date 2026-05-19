@@ -39,15 +39,19 @@
       }
     }
     html, body { margin:0; padding:0; height:100%; background:var(--color-background-secondary); }
+    /* PWA fullscreen fixes */
+    html { height: 100%; }
+    body {
+      height: 100%;
+      overflow: hidden;
+      padding-top: env(safe-area-inset-top);
+    }
     .app {
-      max-height: none !important;
-      height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+      height: 100% !important;
+      min-height: 100% !important;
+      max-height: 100% !important;
       border-radius: 0 !important;
       border: none !important;
-    }
-    body {
-      padding-top: env(safe-area-inset-top);
-      padding-bottom: env(safe-area-inset-bottom);
     }
   </style>
 </head>
@@ -976,6 +980,13 @@ async function runChecks(silent){
 
 function render(){
   const c=document.getElementById('ct');updateCounters();updateYearSelector();
+  // Sécurité : fermer tout backdrop bloquant si aucun modal ouvert
+  const mc=document.getElementById('mc');
+  if(mc&&!mc.innerHTML.trim()){
+    const bk=document.getElementById('bk');
+    if(bk){bk.classList.remove('show');}
+    state.sbOpen=false;
+  }
   if(state.loading){c.innerHTML='<div class="empty"><i class="ti ti-loader-2" aria-hidden="true"></i>Chargement...</div>';return;}
   const v=state.view;
   ({dash:renderDash,biens:renderBiens,tx:renderTx,scan:renderScan,amort:renderAmort,rep:renderRep,fiscal:renderFiscal,forms:renderForms,iy:renderIY,dur:renderDur,chg:renderChg,pv:renderPV,terr:renderTerr,src:renderSrc,notifs:renderNotifs,chk:renderChk}[v])(c);
