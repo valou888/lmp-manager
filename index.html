@@ -258,6 +258,42 @@ tr:hover td{background:var(--color-background-secondary)}
 </div>
 
 <script>
+// ══════════════════════════════════════════════
+// POLYFILL localStorage (doit être défini EN PREMIER)
+// ══════════════════════════════════════════════
+const __storage = {
+  get(key) {
+    return Promise.resolve().then(() => {
+      const value = localStorage.getItem(key);
+      return value !== null ? { key, value } : null;
+    });
+  },
+  set(key, value) {
+    return Promise.resolve().then(() => {
+      const str = typeof value === 'string' ? value : JSON.stringify(value);
+      localStorage.setItem(key, str);
+      return { key, value: str };
+    });
+  },
+  delete(key) {
+    return Promise.resolve().then(() => {
+      localStorage.removeItem(key);
+      return { key, deleted: true };
+    });
+  },
+  list(prefix) {
+    return Promise.resolve().then(() => {
+      const keys = Object.keys(localStorage).filter(k => !prefix || k.startsWith(prefix));
+      return { keys };
+    });
+  }
+};
+
+// CLÉ API Anthropic
+const ANTHROPIC_API_KEY = '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';
+</script>
+
+<script>
 // Transactions 2021-2024 (451 entrées extraites du Journal du fichier 2023-2024_V2)
 const TX_RAW=`t1|2021-06-28|b1|c:entretien|88.70|FOURNITURES - FACT MR BRICOLAGE
 t2|2021-08-13|b2|c:entretien|29.90|FOURNITURES - FACT MR BRICOLAGE
@@ -1360,43 +1396,9 @@ function openLink(u){if(u&&u.startsWith('http'))window.open(u,'_blank');}
 load();
 </script>
 
+
+
 <script>
-// ══════════════════════════════════════════════
-// POLYFILL localStorage (remplace window.storage de Claude)
-// ══════════════════════════════════════════════
-const __storage = {
-  get(key) {
-    return Promise.resolve().then(() => {
-      const value = localStorage.getItem(key);
-      return value !== null ? { key, value } : null;
-    });
-  },
-  set(key, value) {
-    return Promise.resolve().then(() => {
-      const str = typeof value === 'string' ? value : JSON.stringify(value);
-      localStorage.setItem(key, str);
-      return { key, value: str };
-    });
-  },
-  delete(key) {
-    return Promise.resolve().then(() => {
-      localStorage.removeItem(key);
-      return { key, deleted: true };
-    });
-  },
-  list(prefix) {
-    return Promise.resolve().then(() => {
-      const keys = Object.keys(localStorage).filter(k => !prefix || k.startsWith(prefix));
-      return { keys };
-    });
-  }
-};
-
-// ══════════════════════════════════════════════
-// CLÉ API — Remplacez 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 par votre clé sk-ant-...
-// ══════════════════════════════════════════════
-const ANTHROPIC_API_KEY = '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';
-
 // ══════════════════════════════════════════════
 // SÉLECTEUR D'ANNÉE DYNAMIQUE
 // ══════════════════════════════════════════════
@@ -1412,8 +1414,7 @@ function updateYearSelector() {
 function addYear() {
   const annees = state.annees || ['2021','2022','2023','2024','2025'];
   const last = parseInt(annees[annees.length - 1]);
-  const suggestions = [last + 1, last + 2];
-  const input = prompt(`Ajouter une année :\nSuggestion : ${suggestions[0]} ou ${suggestions[1]}`);
+  const input = prompt(`Ajouter une année (suggestion: ${last + 1})`);
   if (!input) return;
   const yr = input.trim();
   if (!/^\d{4}$/.test(yr)) { alert('Format invalide. Ex: 2026'); return; }
@@ -1432,14 +1433,6 @@ function addYear() {
 async function handleScan(inp) {
   const f = inp.files[0]; if (!f) return;
   const r = document.getElementById('sr');
-
-  if (ANTHROPIC_API_KEY === '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') {
-    r.innerHTML = `<div class="al al-w">
-      ⚠️ <strong>Clé API manquante</strong><br>
-      Ouvrez le fichier <code>index.html</code>, cherchez <code>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</code> et remplacez-la par votre clé <code>sk-ant-...</code> obtenue sur <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>.
-    </div>`;
-    return;
-  }
 
   r.innerHTML = '<div class="rc" style="text-align:center;padding:18px"><i class="ti ti-loader-2" style="font-size:22px;display:block;margin-bottom:6px"></i><div style="font-size:12px">Analyse IA en cours...</div></div>';
 
@@ -1466,7 +1459,7 @@ async function handleScan(inp) {
           role: "user",
           content: [
             { type: "image", source: { type: "base64", media_type: f.type || 'image/jpeg', data: b64 } },
-            { type: "text", text: `Analyse cette facture (LMNP La Réunion, TVA 8.5%). Retourne UNIQUEMENT JSON valide sans markdown: {"date":"YYYY-MM-DD","fournisseur":"...","description":"libellé court","montant_ht":0,"tva":0,"montant_ttc":0,"categorie":"assurance|taxe_fonciere|charges_copro|entretien|interets|frais_gestion|electricite|eau|frais_airbnb|travaux|mobilier|autre","type":"charge|recette"}` }
+            { type: "text", text: 'Analyse cette facture (LMNP La Réunion, TVA 8.5%). Retourne UNIQUEMENT JSON valide sans markdown: {"date":"YYYY-MM-DD","fournisseur":"...","description":"libellé court","montant_ht":0,"tva":0,"montant_ttc":0,"categorie":"assurance|taxe_fonciere|charges_copro|entretien|interets|frais_gestion|electricite|eau|frais_airbnb|travaux|mobilier|autre","type":"charge|recette"}' }
           ]
         }]
       })
@@ -1502,9 +1495,7 @@ async function handleScan(inp) {
 // ══════════════════════════════════════════════
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(r => console.log('SW OK:', r.scope))
-      .catch(e => console.log('SW erreur:', e));
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
 }
 
