@@ -1086,30 +1086,8 @@ function renderScan(c){
     <div id="sr"></div>`;
 }
 
-async function handleScan(inp){
-  const f=inp.files[0];if(!f)return;
-  const r=document.getElementById('sr');
-  r.innerHTML='<div class="rc" style="text-align:center;padding:18px"><i class="ti ti-loader-2" style="font-size:22px;display:block;margin-bottom:6px" aria-hidden="true"></i><div style="font-size:12px">Analyse IA...</div></div>';
-  try{
-    const b64=await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(',')[1]);fr.onerror=rej;fr.readAsDataURL(f);});
-    const resp=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-      model:"claude-sonnet-4-20250514",max_tokens:600,
-      messages:[{role:"user",content:[{type:"image",source:{type:"base64",media_type:f.type||'image/jpeg',data:b64}},{type:"text",text:`Analyse cette facture (LMNP La Réunion, TVA 8.5%). Retourne UNIQUEMENT JSON valide sans markdown: {"date":"YYYY-MM-DD","fournisseur":"...","description":"libellé court","montant_ht":0,"tva":0,"montant_ttc":0,"categorie":"assurance|taxe_fonciere|charges_copro|entretien|interets|frais_gestion|electricite|eau|frais_airbnb|travaux|mobilier|autre","type":"charge|recette"}`}]}]})});
-    const data=await resp.json();
-    const txt=data.content?.find(x=>x.type==='text')?.text||'';
-    const res=JSON.parse(txt.replace(/```json|```/g,'').trim());
-    const cat=CATS.find(x=>x.v===res.categorie)||CATS[CATS.length-1];
-    r.innerHTML=`<div class="al al-s">✓ Facture analysée</div><div class="rc"><div style="font-weight:500;margin-bottom:6px"><i class="ti ti-file-invoice" aria-hidden="true"></i> Résultat IA</div>
-      <div class="ff"><span>Date</span><span>${res.date||'—'}</span></div><div class="ff"><span>Fournisseur</span><span>${res.fournisseur||'—'}</span></div>
-      <div class="ff"><span>Description</span><span>${res.description||'—'}</span></div><div class="ff"><span>HT</span><span>${fmt(res.montant_ht)}</span></div>
-      <div class="ff"><span>TVA</span><span>${fmt(res.tva)}</span></div><div class="ff"><span>TTC</span><span style="font-size:14px">${fmt(res.montant_ttc)}</span></div>
-      <div class="ff"><span>Catégorie</span><span><span class="tag">${cat.l}</span></span></div></div>
-      <div style="display:flex;gap:6px;justify-content:flex-end">
-        <button class="btn" onclick="document.getElementById('sr').innerHTML='';document.getElementById('fi-cam').value='';document.getElementById('fi-up').value=''">Recommencer</button>
-        <button class="btn btn-p" onclick='showTxModal(${JSON.stringify({date:res.date,type:res.type||"charge",categorie:res.categorie,montant:res.montant_ttc,fournisseur:res.fournisseur,description:res.description})})'><i class="ti ti-check" aria-hidden="true"></i>Créer écriture</button>
-      </div>`;
-  }catch(e){r.innerHTML='<div class="al al-d">Erreur : '+e.message+'</div>';}
-}
+async function
+// handleScan défini ci-dessous
 
 function renderAmort(c){
   const biens=state.biens.filter(b=>b.prixAchat&&b.dateDebut);

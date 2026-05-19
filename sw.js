@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lmnp-v1';
+const CACHE_NAME = 'lmnp-v3';
 const ASSETS = [
   './',
   './index.html',
